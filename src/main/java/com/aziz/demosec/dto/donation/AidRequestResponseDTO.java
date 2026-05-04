@@ -1,6 +1,7 @@
 package com.aziz.demosec.dto.donation;
 
 import com.aziz.demosec.Entities.AidRequestStatus;
+import com.aziz.demosec.Entities.AidRequestType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class AidRequestResponseDTO {
     private Long id;
     private Long patientId;
     private String patientName;
+    private AidRequestType type;
     private String description;
     private String supportingDocument;
     private AidRequestStatus status;

@@ -1,21 +1,31 @@
 package com.aziz.demosec.service;
 
 import com.aziz.demosec.Entities.AidRequest;
+import com.aziz.demosec.Entities.AidRequestType;
+import com.aziz.demosec.Entities.Donation;
 import com.aziz.demosec.Entities.Patient;
 import com.aziz.demosec.dto.ai.EligibilityRequestDTO;
 import com.aziz.demosec.dto.ai.EligibilityResponseDTO;
 import com.aziz.demosec.repository.AidRequestRepository;
+import com.aziz.demosec.repository.DonationRepository;
 import com.aziz.demosec.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +34,7 @@ public class EligibilityService {
 
     private final AidRequestRepository aidRequestRepository;
     private final PatientRepository    patientRepository;
+    private final DonationRepository   donationRepository;
     private final RestTemplate         restTemplate;
 
     @Value("${ai.service.url:http://localhost:8000}")
@@ -38,6 +49,12 @@ public class EligibilityService {
         // ── 1. Charger la demande d'aide ─────────────────────────────────────
         AidRequest aidRequest = aidRequestRepository.findById(aidRequestId)
                 .orElseThrow(() -> new RuntimeException("AidRequest not found: " + aidRequestId));
+
+        // ── Routing : type MEDICAMENT → modèle OCR prescription ─────────────
+        if (aidRequest.getType() == AidRequestType.MEDICAMENT) {
+            log.info("AidRequest#{} type=MEDICAMENT → using medicament OCR model", aidRequestId);
+            return checkEligibilityByPrescription(aidRequest);
+        }
 
         Long patientUserId = aidRequest.getPatient().getId();
 
@@ -151,6 +168,99 @@ public class EligibilityService {
         }
 
         return response;
+    }
+
+    // ── Modèle médicament OCR ─────────────────────────────────────────────────
+
+    private EligibilityResponseDTO checkEligibilityByPrescription(AidRequest aidRequest) {
+        String base64 = aidRequest.getDocumentFile();
+
+        // Aucun document uploadé → rejet immédiat sans appel IA
+        if (base64 == null || base64.isBlank()) {
+            log.warn("AidRequest#{} type=MEDICAMENT sans document de prescription — rejet automatique", aidRequest.getId());
+            return EligibilityResponseDTO.builder()
+                    .aidRequestId(aidRequest.getId())
+                    .patientName(aidRequest.getPatient().getFullName())
+                    .eligible(false)
+                    .probability(0.0)
+                    .decision("NOT_ELIGIBLE")
+                    .confidence("HIGH")
+                    .details(java.util.Map.of("rejection_reason",
+                            "Aucun document de prescription fourni. Veuillez uploader une ordonnance."))
+                    .build();
+        }
+
+        // Supprimer le préfixe data URL si présent (ex: "data:image/png;base64,...")
+        if (base64.contains(",")) {
+            base64 = base64.substring(base64.indexOf(',') + 1);
+        }
+
+        byte[] imageBytes;
+        try {
+            imageBytes = Base64.getDecoder().decode(base64);
+        } catch (Exception e) {
+            log.error("Impossible de décoder le document base64 pour AidRequest#{}: {}", aidRequest.getId(), e.getMessage());
+            throw new RuntimeException("Document de prescription invalide (base64 corrompu)");
+        }
+
+        // Construire la requête multipart
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        ByteArrayResource imageResource = new ByteArrayResource(imageBytes) {
+            @Override public String getFilename() { return "prescription.jpg"; }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", imageResource);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        String endpoint = aiServiceUrl + "/api/ai/predict-medicament";
+        log.info("Calling AI medicament model: {} for aidRequest#{}", endpoint, aidRequest.getId());
+
+        EligibilityResponseDTO response;
+        try {
+            response = restTemplate.postForObject(endpoint, requestEntity, EligibilityResponseDTO.class);
+        } catch (Exception e) {
+            log.error("AI medicament service call failed: {}", e.getMessage());
+            throw new RuntimeException("Service IA médicament indisponible: " + e.getMessage());
+        }
+
+        if (response != null) {
+            response.setAidRequestId(aidRequest.getId());
+            response.setPatientName(aidRequest.getPatient().getFullName());
+            enrichWithDonationAvailability(response);
+        }
+        return response;
+    }
+
+    // ── Donation availability check ───────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private void enrichWithDonationAvailability(EligibilityResponseDTO response) {
+        if (response.getDetails() == null) return;
+        Object medicinesObj = response.getDetails().get("medicines_detected");
+        if (!(medicinesObj instanceof List<?> medicines) || medicines.isEmpty()) return;
+
+        List<Donation> stock = donationRepository.findAvailableMedicamentDonations();
+        Map<String, Boolean> availability = new LinkedHashMap<>();
+
+        for (Object medObj : medicines) {
+            if (!(medObj instanceof Map<?, ?> med)) continue;
+            String name = med.get("name") != null ? med.get("name").toString() : null;
+            if (name == null || name.isBlank()) continue;
+
+            String nameLower = name.toLowerCase();
+            boolean found = stock.stream().anyMatch(d -> {
+                String cat  = d.getCategorie();
+                String desc = d.getDescription();
+                return (cat  != null && cat.toLowerCase().contains(nameLower))
+                    || (desc != null && desc.toLowerCase().contains(nameLower));
+            });
+            availability.put(name, found);
+        }
+        response.setMedicineAvailability(availability);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

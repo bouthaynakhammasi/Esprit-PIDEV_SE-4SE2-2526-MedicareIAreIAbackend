@@ -5,6 +5,7 @@ import com.aziz.demosec.Entities.EmergencySeverity;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,4 +21,5 @@ public class EmergencyAlertResponseDTO {
     private Double longitude;
     private Boolean canceledByPatient;
     private LocalDateTime createdAt;
+
 }

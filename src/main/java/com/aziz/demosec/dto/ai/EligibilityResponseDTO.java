@@ -19,4 +19,7 @@ public class EligibilityResponseDTO {
     // Extra fields added by Spring Boot before returning to Angular
     private Long aidRequestId;
     private String patientName;
+
+    // Per-medicine stock availability (MEDICAMENT requests only)
+    private Map<String, Boolean> medicineAvailability;
 }

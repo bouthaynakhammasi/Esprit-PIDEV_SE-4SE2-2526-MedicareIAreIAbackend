@@ -54,7 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
 
                         // ─── WEBSOCKET ───────────────────────────────────────
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws", "/ws/**").permitAll()
 
                         // ─── AI ELIGIBILITY ────────────────────────────────
                         .requestMatchers("/api/ai/**").permitAll()

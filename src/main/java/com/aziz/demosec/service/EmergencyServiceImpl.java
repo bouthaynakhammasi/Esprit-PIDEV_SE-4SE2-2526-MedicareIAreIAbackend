@@ -6,6 +6,7 @@ import com.aziz.demosec.domain.User;
 import com.aziz.demosec.dto.emergency.*;
 import com.aziz.demosec.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmergencyServiceImpl implements IEmergencyService {
 
     private final SmartDeviceRepository smartDeviceRepository;
@@ -21,6 +23,7 @@ public class EmergencyServiceImpl implements IEmergencyService {
     private final EmergencyInterventionRepository interventionRepository;
     private final UserRepository userRepository;
     private final ClinicRepository clinicRepository;
+    private final WsNotificationService wsNotificationService;
 
     // ─── SMART DEVICE ─────────────────────────────────────────────
 
@@ -52,6 +55,13 @@ public class EmergencyServiceImpl implements IEmergencyService {
     }
 
     @Override
+    public SmartDeviceResponseDTO getSmartDeviceByPatientId(Long patientId) {
+        SmartDevice device = smartDeviceRepository.findByPatientId(patientId)
+                .orElseThrow(() -> new RuntimeException("No SmartDevice found for patient: " + patientId));
+        return toSmartDeviceDTO(device);
+    }
+
+    @Override
     public void deleteSmartDevice(Long id) {
         smartDeviceRepository.deleteById(id);
     }
@@ -71,7 +81,20 @@ public class EmergencyServiceImpl implements IEmergencyService {
                 .canceledByPatient(false)
                 .build();
 
-        return toAlertDTO(alertRepository.save(alert));
+        EmergencyAlert saved = alertRepository.save(alert);
+
+        // 🔔 Notifier toutes les cliniques via WebSocket
+        // 2 JOINs : EmergencyAlert → SmartDevice → Patient
+        String patientName = alertRepository.findPatientByAlertId(saved.getId())
+                .map(u -> u.getFullName())
+                .orElse("Un patient");
+        wsNotificationService.notifyClinic(
+                "🚨 Nouvelle alerte d'urgence",
+                patientName + " a envoyé une demande d'urgence.",
+                "warning"
+        );
+
+        return toAlertDTO(saved);
     }
 
     @Override
@@ -112,12 +135,10 @@ public class EmergencyServiceImpl implements IEmergencyService {
 
     @Override
     public AmbulanceResponseDTO createAmbulance(AmbulanceRequestDTO dto) {
-        Clinic clinic = clinicRepository.findById(dto.getClinicId())
-                .orElseGet(() -> {
-                    // Fallback to the first clinic if not found by ID (useful for dev/env issues)
-                    return clinicRepository.findAll().stream().findFirst()
-                        .orElseThrow(() -> new RuntimeException("No clinics found in database. Please create a clinic first."));
-                });
+        // Cherche d'abord par userId (= ID de l'utilisateur connecté), puis par Clinic.id
+        Clinic clinic = clinicRepository.findByUserId(dto.getClinicId())
+                .orElseGet(() -> clinicRepository.findById(dto.getClinicId())
+                        .orElseThrow(() -> new RuntimeException("Clinic not found for userId=" + dto.getClinicId())));
 
         Ambulance ambulance = Ambulance.builder()
                 .clinic(clinic)
@@ -143,8 +164,12 @@ public class EmergencyServiceImpl implements IEmergencyService {
     }
 
     @Override
-    public List<AmbulanceResponseDTO> getAmbulancesByClinic(Long clinicId) {
-        return ambulanceRepository.findByClinicId(clinicId)
+    public List<AmbulanceResponseDTO> getAmbulancesByClinic(Long userId) {
+        // Résoudre le vrai Clinic.id depuis userId
+        Long realClinicId = clinicRepository.findByUserId(userId)
+                .map(c -> c.getId())
+                .orElse(userId); // fallback si ancienne donnée
+        return ambulanceRepository.findByClinicId(realClinicId)
                 .stream().map(this::toAmbulanceDTO)
                 .collect(Collectors.toList());
     }
@@ -171,15 +196,72 @@ public class EmergencyServiceImpl implements IEmergencyService {
     // ─── INTERVENTION ─────────────────────────────────────────────
 
     @Override
-    public EmergencyInterventionResponseDTO dispatchIntervention(EmergencyInterventionRequestDTO dto) {
-        EmergencyAlert alert = findAlertById(dto.getEmergencyAlertId());
-        Clinic clinic = clinicRepository.findById(dto.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
-        Ambulance ambulance = findAmbulanceById(dto.getAmbulanceId());
+    public AutoDispatchResponseDTO autoDispatch(Long alertId) {
+        EmergencyAlert alert = findAlertById(alertId);
 
-        // Mettre à jour le statut de l'alerte
+        List<Ambulance> available = ambulanceRepository.findByStatus("AVAILABLE").stream()
+                .filter(a -> a.getCurrentLat() != null && a.getCurrentLng() != null)
+                .collect(Collectors.toList());
+
+        if (available.isEmpty()) {
+            throw new RuntimeException("No available ambulances with GPS coordinates found");
+        }
+
+        Ambulance closest = null;
+        double minDistance = Double.MAX_VALUE;
+        for (Ambulance amb : available) {
+            double dist = haversineDistance(alert.getLatitude(), alert.getLongitude(),
+                    amb.getCurrentLat(), amb.getCurrentLng());
+            if (dist < minDistance) {
+                minDistance = dist;
+                closest = amb;
+            }
+        }
+
+        closest.setStatus("ON_DUTY");
+        ambulanceRepository.save(closest);
+
         alert.setStatus(EmergencyAlertStatus.CLINIC_NOTIFIED);
         alertRepository.save(alert);
+
+        Clinic clinic = closest.getClinic();
+        EmergencyIntervention intervention = EmergencyIntervention.builder()
+                .emergencyAlert(alert)
+                .clinic(clinic)
+                .ambulance(closest)
+                .dispatchedAt(LocalDateTime.now())
+                .status(EmergencyInterventionStatus.DISPATCHED)
+                .build();
+        EmergencyIntervention saved = interventionRepository.save(intervention);
+
+        return AutoDispatchResponseDTO.builder()
+                .interventionId(saved.getId())
+                .emergencyAlertId(alertId)
+                .patientName(alert.getDevice().getPatient().getFullName())
+                .ambulanceId(closest.getId())
+                .ambulanceLicensePlate(closest.getLicensePlate())
+                .clinicId(clinic != null ? clinic.getId() : null)
+                .clinicName(clinic != null ? clinic.getName() : null)
+                .distanceKm(Math.round(minDistance * 10.0) / 10.0)
+                .status(EmergencyInterventionStatus.DISPATCHED.name())
+                .dispatchedAt(saved.getDispatchedAt())
+                .build();
+    }
+
+    @Override
+    public EmergencyInterventionResponseDTO dispatchIntervention(EmergencyInterventionRequestDTO dto) {
+        EmergencyAlert alert = findAlertById(dto.getEmergencyAlertId());
+        Clinic clinic = clinicRepository.findByUserId(dto.getClinicId())
+                .orElseGet(() -> clinicRepository.findById(dto.getClinicId())
+                        .orElseThrow(() -> new RuntimeException("Clinic not found for userId=" + dto.getClinicId())));
+        Ambulance ambulance = findAmbulanceById(dto.getAmbulanceId());
+
+        // Mettre à jour le statut de l'alerte et de l'ambulance
+        alert.setStatus(EmergencyAlertStatus.CLINIC_NOTIFIED);
+        alertRepository.save(alert);
+
+        ambulance.setStatus("ON_DUTY");
+        ambulanceRepository.save(ambulance);
 
         EmergencyIntervention intervention = EmergencyIntervention.builder()
                 .emergencyAlert(alert)
@@ -241,14 +323,28 @@ public class EmergencyServiceImpl implements IEmergencyService {
                 .orElseThrow(() -> new RuntimeException("Intervention not found: " + id));
     }
 
+    private double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
     // ─── MAPPERS ──────────────────────────────────────────────────
 
     private SmartDeviceResponseDTO toSmartDeviceDTO(SmartDevice d) {
-        return SmartDeviceResponseDTO.builder()
+        SmartDeviceResponseDTO.SmartDeviceResponseDTOBuilder builder = SmartDeviceResponseDTO.builder()
                 .id(d.getId())
                 .patientId(d.getPatient().getId())
-                .patientName(d.getPatient().getFullName())
-                .build();
+                .patientName(d.getPatient().getFullName());
+        if (d.getPatient() instanceof Patient patient) {
+            builder.emergencyContactName(patient.getEmergencyContactName())
+                   .emergencyContactPhone(patient.getEmergencyContactPhone());
+        }
+        return builder.build();
     }
 
     private EmergencyAlertResponseDTO toAlertDTO(EmergencyAlert a) {

@@ -11,6 +11,7 @@ public interface IEmergencyService {
     // ─── SMART DEVICE ─────────────────────────────────────────────
     SmartDeviceResponseDTO createSmartDevice(SmartDeviceRequestDTO dto);
     SmartDeviceResponseDTO getSmartDeviceById(Long id);
+    SmartDeviceResponseDTO getSmartDeviceByPatientId(Long patientId);
     List<SmartDeviceResponseDTO> getAllSmartDevices();
     void deleteSmartDevice(Long id);
 
@@ -32,6 +33,7 @@ public interface IEmergencyService {
 
     // ─── INTERVENTION ─────────────────────────────────────────────
     EmergencyInterventionResponseDTO dispatchIntervention(EmergencyInterventionRequestDTO dto);
+    AutoDispatchResponseDTO autoDispatch(Long alertId);
     EmergencyInterventionResponseDTO getInterventionById(Long id);
     List<EmergencyInterventionResponseDTO> getAllInterventions();
     EmergencyInterventionResponseDTO updateInterventionStatus(Long id, EmergencyInterventionStatus status);

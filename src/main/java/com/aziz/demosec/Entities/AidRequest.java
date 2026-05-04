@@ -44,6 +44,10 @@ public class AidRequest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private AidRequestType type;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AidRequestStatus status;
 

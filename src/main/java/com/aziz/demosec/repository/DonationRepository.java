@@ -17,6 +17,13 @@ public interface DonationRepository extends JpaRepository<Donation, Long> {
     List<Donation> findByStatus(DonationStatus status);
     List<Donation> findByType(DonationType type);
 
+    @Query("""
+            SELECT d FROM Donation d
+            WHERE d.type = com.aziz.demosec.Entities.DonationType.MEDICAMENT
+              AND d.status = com.aziz.demosec.Entities.DonationStatus.AVAILABLE
+            """)
+    List<Donation> findAvailableMedicamentDonations();
+
     /**
      * JPQL with join — returns AVAILABLE donations of the given category joined
      * with the creator User table, ensuring only donations with a valid donor

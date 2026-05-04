@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface AmbulanceRepository extends JpaRepository<Ambulance, Long> {
     List<Ambulance> findByClinicId(Long clinicId);
+    List<Ambulance> findByStatus(String status);
 }

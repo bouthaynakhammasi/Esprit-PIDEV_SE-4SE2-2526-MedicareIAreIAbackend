@@ -18,6 +18,7 @@ public class DonationServiceImpl implements IDonationService {
     private final DonationAssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
     private final WsNotificationService wsNotificationService;
+    private final EmailService emailService;
 
     // ─── DONATION ─────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ public class DonationServiceImpl implements IDonationService {
 
         AidRequest request = AidRequest.builder()
                 .patient(patient)
+                .type(dto.getType())
                 .description(dto.getDescription())
                 .documentFile(dto.getSupportingDocument())
                 .status(AidRequestStatus.PENDING)
@@ -167,6 +169,7 @@ public class DonationServiceImpl implements IDonationService {
     @Override
     public AidRequestResponseDTO updateAidRequest(Long id, AidRequestDTO dto) {
         AidRequest request = findAidRequestById(id);
+        if (dto.getType() != null) request.setType(dto.getType());
         request.setDescription(dto.getDescription());
         if (dto.getSupportingDocument() != null && !dto.getSupportingDocument().isEmpty()) {
             request.setDocumentFile(dto.getSupportingDocument());
@@ -191,15 +194,20 @@ public class DonationServiceImpl implements IDonationService {
                 .aidRequest(request)
                 .build();
 
-        DonationAssignmentResponseDTO result = toAssignmentResponseDTO(assignmentRepository.save(assignment));
+        DonationAssignment savedAssignment = assignmentRepository.save(assignment);
+        DonationAssignmentResponseDTO result = toAssignmentResponseDTO(savedAssignment);
 
         // 🔔 Notifier le patient en temps réel via WebSocket
         wsNotificationService.notifyPatient(
             request.getPatient().getId(),
             "Don assigné 🎁",
-            "Un don a été assigné à votre demande d'aide #" + request.getId() + ".",
+            "Un don a été assigné à votre demande d'aide.",
             "info"
         );
+
+        // 📧 Envoyer les emails de notification (asynchrone, n'impacte pas la transaction)
+        assignmentRepository.findEmailDataByAssignmentId(savedAssignment.getId())
+            .ifPresent(data -> emailService.sendAssignmentEmails(data, request.getId()));
 
         return result;
     }
@@ -287,6 +295,7 @@ public class DonationServiceImpl implements IDonationService {
                 .id(r.getId())
                 .patientId(r.getPatient().getId())
                 .patientName(r.getPatient().getFullName())
+                .type(r.getType())
                 .description(r.getDescription())
                 .supportingDocument(r.getDocumentFile())
                 .status(r.getStatus())

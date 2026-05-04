@@ -38,7 +38,7 @@ public class AmbulanceController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AmbulanceResponseDTO> update(
-            @PathVariable Long id, @Valid @RequestBody AmbulanceRequestDTO dto) {
+            @PathVariable Long id, @RequestBody AmbulanceRequestDTO dto) {
         return ResponseEntity.ok(emergencyService.updateAmbulance(id, dto));
     }
 

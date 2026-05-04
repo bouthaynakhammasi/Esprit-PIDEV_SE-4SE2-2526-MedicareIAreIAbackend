@@ -30,6 +30,11 @@ public class SmartDeviceController {
         return ResponseEntity.ok(emergencyService.getSmartDeviceById(id));
     }
 
+    @GetMapping("/by-patient/{patientId}")
+    public ResponseEntity<SmartDeviceResponseDTO> getByPatientId(@PathVariable Long patientId) {
+        return ResponseEntity.ok(emergencyService.getSmartDeviceByPatientId(patientId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         emergencyService.deleteSmartDevice(id);

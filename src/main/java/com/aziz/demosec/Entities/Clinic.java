@@ -37,4 +37,7 @@ public class Clinic {
     @Builder.Default
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean verified = false;
+
+    @Column(name = "user_id", unique = true)
+    private Long userId;
 }

@@ -23,6 +23,11 @@ public class EmergencyInterventionController {
         return ResponseEntity.ok(emergencyService.dispatchIntervention(dto));
     }
 
+    @PostMapping("/auto-dispatch/{alertId}")
+    public ResponseEntity<AutoDispatchResponseDTO> autoDispatch(@PathVariable Long alertId) {
+        return ResponseEntity.ok(emergencyService.autoDispatch(alertId));
+    }
+
     @GetMapping
     public ResponseEntity<List<EmergencyInterventionResponseDTO>> getAll() {
         return ResponseEntity.ok(emergencyService.getAllInterventions());

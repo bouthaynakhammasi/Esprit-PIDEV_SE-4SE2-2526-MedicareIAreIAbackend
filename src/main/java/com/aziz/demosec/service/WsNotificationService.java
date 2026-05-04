@@ -32,4 +32,14 @@ public class WsNotificationService {
         log.info("[WS] → Patient #{} : {}", patientId, title);
         messagingTemplate.convertAndSend("/topic/patient/" + patientId + "/notifications", notif);
     }
+
+    /**
+     * Diffuse une notification à toutes les cliniques connectées.
+     * Topic : /topic/clinic/notifications
+     */
+    public void notifyClinic(String title, String message, String type) {
+        NotificationMessage notif = NotificationMessage.of(title, message, type, null);
+        log.info("[WS] → Clinic : {}", title);
+        messagingTemplate.convertAndSend("/topic/clinic/notifications", notif);
+    }
 }

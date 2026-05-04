@@ -220,6 +220,7 @@ public class IAuthServiceImp implements IAuthService {
         clinic.setEmergencyPhone(req.getEmergencyPhone());
         clinic.setAmbulancePhone(req.getAmbulancePhone());
         clinic.setVerified(false);
+        clinic.setUserId(user.getId());
         clinicRepository.save(clinic);
 
         return user;
