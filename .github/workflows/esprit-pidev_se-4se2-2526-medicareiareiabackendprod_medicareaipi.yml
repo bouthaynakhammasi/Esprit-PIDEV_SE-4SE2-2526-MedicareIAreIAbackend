@@ -25,13 +25,12 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
-        working-directory: ./Esprit-PIDEV_SE-4SE2-2526-MedicareIAreIAbackend
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/Esprit-PIDEV_SE-4SE2-2526-MedicareIAreIAbackend/target/*.jar'
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: windows-latest
