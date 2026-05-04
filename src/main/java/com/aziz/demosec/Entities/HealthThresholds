@@ -1,0 +1,18 @@
+package com.aziz.demosec.Config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ConfigurationProperties(prefix = "health")
+public class HealthThresholds {
+
+    private double bmiMin = 18.5;
+    private double bmiMax = 24.9;
+
+    public double getBmiMin() { return bmiMin; }
+    public void setBmiMin(double bmiMin) { this.bmiMin = bmiMin; }
+
+    public double getBmiMax() { return bmiMax; }
+    public void setBmiMax(double bmiMax) { this.bmiMax = bmiMax; }
+}
