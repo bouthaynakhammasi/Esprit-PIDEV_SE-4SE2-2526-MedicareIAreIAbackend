@@ -1,5 +1,6 @@
 package com.aziz.demosec.Entities;
 
+import com.aziz.demosec.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,7 +19,7 @@ public class FoodDiary {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
-    private Patient patient;
+    private User patient;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lifestyle_plan_id")

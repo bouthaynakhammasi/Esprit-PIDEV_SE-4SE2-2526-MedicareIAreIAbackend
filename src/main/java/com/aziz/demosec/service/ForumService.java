@@ -17,6 +17,7 @@ public interface ForumService {
     PostResponse createPost(PostRequest request, MultipartFile image);
     PostResponse createPostWithImage(PostUploadRequest request, MultipartFile image);
     PostResponse updatePost(Long id, PostRequest request);
+    PostResponse updatePost(Long id, PostRequest request, MultipartFile image);
     void deletePost(Long id);
     
     // Like operations

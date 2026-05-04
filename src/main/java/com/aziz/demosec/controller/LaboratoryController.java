@@ -24,6 +24,11 @@ public class LaboratoryController {
         return ResponseEntity.ok(laboratoryService.getMyLaboratory(authentication.getName()));
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<LaboratoryResponse> getProfile(Authentication authentication) {
+        return ResponseEntity.ok(laboratoryService.getMyLaboratory(authentication.getName()));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<LaboratoryResponse> updateProfile(
             Authentication authentication,

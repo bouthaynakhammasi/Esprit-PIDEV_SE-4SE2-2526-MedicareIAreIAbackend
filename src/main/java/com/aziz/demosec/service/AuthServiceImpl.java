@@ -1,5 +1,7 @@
 package com.aziz.demosec.service;
 
+import com.aziz.demosec.Entities.Laboratory;
+import com.aziz.demosec.Entities.LaboratoryStaff;
 import com.aziz.demosec.Entities.Patient;
 import com.aziz.demosec.Entities.Pharmacist;
 import com.aziz.demosec.Entities.Pharmacy;
@@ -11,13 +13,15 @@ import com.aziz.demosec.domain.User;
 import com.aziz.demosec.dto.AuthResponse;
 import com.aziz.demosec.dto.LoginRequest;
 import com.aziz.demosec.dto.RegisterRequest;
+import com.aziz.demosec.repository.LaboratoryRepository;
+import com.aziz.demosec.repository.LaboratoryStaffRepository;
+import com.aziz.demosec.repository.NutritionistRepository;
 import com.aziz.demosec.repository.PasswordResetTokenRepository;
 import com.aziz.demosec.repository.PatientRepository;
 import com.aziz.demosec.repository.PharmacistRepository;
 import com.aziz.demosec.repository.PharmacyRepository;
 import com.aziz.demosec.repository.UserRepository;
 import com.aziz.demosec.repository.DoctorRepository;
-import com.aziz.demosec.repository.NutritionistRepository;
 import com.aziz.demosec.security.CustomUserDetailsService;
 import com.aziz.demosec.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,8 @@ public class AuthServiceImpl implements AuthService {
     private final PharmacyRepository pharmacyRepository;
     private final DoctorRepository doctorRepository;
     private final NutritionistRepository nutritionistRepository;
+    private final LaboratoryRepository laboratoryRepository;
+    private final LaboratoryStaffRepository laboratoryStaffRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
@@ -220,6 +226,34 @@ public class AuthServiceImpl implements AuthService {
             nutritionist.setConsultationMode(req.consultationMode() != null ? req.consultationMode() : com.aziz.demosec.Entities.ConsultationMode.BOTH);
 
             return nutritionistRepository.save(nutritionist);
+        }
+
+        // =========================
+        // CAS LABORATORY_STAFF
+        // =========================
+        if (req.role() == Role.LABORATORY_STAFF) {
+            // 1. Create Laboratory
+            Laboratory lab = Laboratory.builder()
+                    .name(req.pharmacyName() != null ? req.pharmacyName() : "New Laboratory") // Using pharmacyName field for convenience if needed, or fullName
+                    .address(req.pharmacyAddress() != null ? req.pharmacyAddress() : "")
+                    .phone(req.phone())
+                    .email(req.email())
+                    .active(true)
+                    .build();
+            lab = laboratoryRepository.save(lab);
+
+            // 2. Create Laboratory Staff
+            LaboratoryStaff staff = new LaboratoryStaff();
+            staff.setFullName(req.fullName() == null ? "Not Available" : req.fullName());
+            staff.setEmail(req.email());
+            staff.setPassword(passwordEncoder.encode(req.password()));
+            staff.setRole(Role.LABORATORY_STAFF);
+            staff.setPhone(req.phone());
+            staff.setBirthDate(req.birthDate());
+            staff.setEnabled(true);
+            staff.setLaboratory(lab);
+
+            return laboratoryStaffRepository.save(staff);
         }
 
         // =========================

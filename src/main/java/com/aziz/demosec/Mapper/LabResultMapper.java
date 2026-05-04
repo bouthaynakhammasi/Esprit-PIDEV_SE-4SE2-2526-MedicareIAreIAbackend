@@ -56,6 +56,10 @@ public class LabResultMapper {
                 .isAbnormal(labResult.getIsAbnormal())
                 .completedAt(labResult.getCompletedAt())
                 .verifiedAt(labResult.getVerifiedAt())
+                .aiDiagnostic(labResult.getAiDiagnostic())
+                .aiRisk(labResult.getAiRisk())
+                .aiConfidence(labResult.getAiConfidence())
+                .aiAlertSent(labResult.getAiAlertSent())
                 .build();
     }
 

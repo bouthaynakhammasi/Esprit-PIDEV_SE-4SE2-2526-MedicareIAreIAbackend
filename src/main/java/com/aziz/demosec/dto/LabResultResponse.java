@@ -19,4 +19,10 @@ public class LabResultResponse {
     private Boolean isAbnormal;
     private LocalDateTime completedAt;
     private LocalDateTime verifiedAt;
+
+    // Alzheimer AI
+    private String aiDiagnostic;
+    private String aiRisk;
+    private Double aiConfidence;
+    private Boolean aiAlertSent;
 }

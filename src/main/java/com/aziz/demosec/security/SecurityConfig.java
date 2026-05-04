@@ -56,8 +56,19 @@ public class SecurityConfig {
                         // OPTIONS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+
                         // Public auth endpoints
                         .requestMatchers("/auth/**", "/api/auth/**", "/error/**").permitAll()
+
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/error/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/uploads/comments/**").permitAll()
+                        .requestMatchers("/api/home-care-services/**").permitAll()
+                        .requestMatchers("/user/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
+
 
                         // Public data
                         .requestMatchers("/uploads/**").permitAll()
@@ -93,9 +104,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/forum/comments/**").authenticated()
                         .requestMatchers("/api/forum/posts/*/like").authenticated()
 
+
                         // Medical access
                         .requestMatchers("/treatment/**", "/diagnosis/**", "/consultation/**", "/prescription/**")
                             .hasAnyRole("DOCTOR", "NUTRITIONIST")
+
+                        // CODE BLUE - Emergency live thread
+                        .requestMatchers("/api/code-blue/**").authenticated()
+
+                        // MESSAGING - Chat channels & messages
+                        .requestMatchers("/api/forum/messaging/**").authenticated()
+
+                        // WHATSAPP - Alerts
+                        .requestMatchers("/api/forum/whatsapp/**").authenticated()
+
 
                         // Role-based access
                         .requestMatchers("/api/admin/**", "/admin/**").hasRole("ADMIN")
@@ -110,10 +132,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/home-care/**").hasRole("HOME_CARE_PROVIDER")
                         .requestMatchers("/api/homecare/provider/**").hasRole("HOME_CARE_PROVIDER")
 
+
                         // Pharmacy orders
                         .requestMatchers("/api/pharmacy/orders/patient/**").hasRole("PATIENT")
                         .requestMatchers("/api/pharmacy/orders/pharmacy/**").hasRole("PHARMACIST")
                         .requestMatchers("/api/pharmacy/orders/**").authenticated()
+
+                        .requestMatchers("/laboratory/**").hasRole("LABORATORY_STAFF")
+                        .requestMatchers("/api/lab-staff/**").hasRole("LABORATORY_STAFF")
+                        .requestMatchers("/api/lab-narrator/**").hasRole("LABORATORY_STAFF")
+
 
                         // User management
                         .requestMatchers("/api/users/role/DOCTOR").hasAnyRole("PATIENT", "ADMIN")

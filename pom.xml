@@ -99,10 +99,14 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+
+        <!-- WebSocket / STOMP -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+
 
         <!-- PDF Invoice generation -->
         <dependency>
@@ -142,6 +146,14 @@
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
+
+        <!-- Twilio SDK pour WhatsApp -->
+        <dependency>
+            <groupId>com.twilio.sdk</groupId>
+            <artifactId>twilio</artifactId>
+            <version>10.1.5</version>
+        </dependency>
+
     </dependencies>
 
     <build>

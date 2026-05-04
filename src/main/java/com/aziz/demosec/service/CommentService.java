@@ -2,13 +2,15 @@ package com.aziz.demosec.service;
 
 import com.aziz.demosec.dto.CommentRequest;
 import com.aziz.demosec.dto.CommentResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface CommentService {
 
-    // ✅ Créer un commentaire
     CommentResponse create(CommentRequest request);
+
+    CommentResponse createWithImage(CommentRequest request, MultipartFile image);
 
     // ✅ Récupérer un commentaire par ID
     CommentResponse getById(Long id);

@@ -42,6 +42,30 @@ public class LabResult {
     @Column(name = "verified_at")
     private LocalDateTime verifiedAt;
 
+    // ---- Alzheimer AI fields ----
+    @Column(length = 50)
+    private String aiDiagnostic;
+
+    @Column(length = 20)
+    private String aiRisk;
+
+    private Double aiConfidence;
+
+    @Builder.Default
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean aiAlertSent = false;
+
+    // ---- AI Narrative fields ----
+    @Builder.Default
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean narrativeGenerated = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String patientNarrative;
+
+    @Column(columnDefinition = "TEXT")
+    private String doctorNarrative;
+
     @PrePersist
     protected void onCreate() {
         if (completedAt == null) completedAt = LocalDateTime.now();

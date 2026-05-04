@@ -21,6 +21,8 @@ public class CommentMapper {
     public CommentResponse toDto(Comment comment) {
         return CommentResponse.builder()
                 .id(comment.getId())
+                .postId(comment.getPost() != null ? comment.getPost().getId() : null)
+                .authorId(comment.getAuthor().getId())
                 .authorName(comment.getAuthor().getFullName())
                 .authorRole(comment.getAuthor().getRole().name())
                 .content(comment.getContent())

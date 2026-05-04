@@ -22,6 +22,7 @@ public class LabRequestResponse {
     private LabRequestStatus status;
     private String testType;
     private String clinicalNotes;
+    private String doctorEmail;
 
     private LocalDateTime scheduledAt;
     private LocalDateTime requestedAt;

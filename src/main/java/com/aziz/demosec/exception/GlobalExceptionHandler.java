@@ -1,11 +1,14 @@
 package com.aziz.demosec.exception;
 
+import com.aziz.demosec.exception.ContentViolationException;
 import com.aziz.demosec.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,6 +17,23 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ContentViolationException.class)
+    public ResponseEntity<?> handleContentViolation(ContentViolationException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                "error", "CONTENT_VIOLATION",
+                "message", ex.getMessage(),
+                "cleanedText", ex.getCleanedText()
+        ));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", "FORBIDDEN",
+                "message", ex.getMessage() != null ? ex.getMessage() : "You are not allowed to perform this action"
+        ));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> handleResourceNotFound(ResourceNotFoundException ex) {
@@ -50,6 +70,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of(
                 "error", "Invalid request body",
                 "details", details
+        ));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<?> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(Map.of(
+                "error", "Method Not Allowed",
+                "message", ex.getMessage(),
+                "supportedMethods", ex.getSupportedHttpMethods() != null ? ex.getSupportedHttpMethods() : "N/A"
         ));
     }
 

@@ -26,7 +26,8 @@ public class PostMapper {
         return Post.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .category(dto.getCategory()) // 
+                .category(dto.getCategory())
+                .postType(dto.getPostType() != null ? dto.getPostType() : "DISCUSSION")
                 .build();
     }
 
@@ -51,17 +52,20 @@ public class PostMapper {
 
         return PostResponse.builder()
                 .id(post.getId())
+                .authorId(post.getAuthor().getId())
                 .authorName(post.getAuthor().getFullName())
-                .authorRole(post.getAuthor().getRole().name()) // 
+                .authorRole(post.getAuthor().getRole().name()) //
                 .title(post.getTitle())
                 .content(post.getContent())
-                .category(post.getCategory())                  // 
-                .imageUrl(post.getImageUrl())                 // 
+                .category(post.getCategory())
+                .postType(post.getPostType() != null ? post.getPostType() : "DISCUSSION")
+                .imageUrl(post.getImageUrl())
                 .createdAt(post.getCreatedAt())
                 .commentsCount(post.getComments() != null ? post.getComments().size() : 0) // 
                 .likesCount(post.getLikes() != null ? post.getLikes().size() : 0)          // 
                 .comments(null) // Éviter la dépendance cyclique pour l'instant
-                .isLikedByUser(isLikedByUser) // 
+                .isLikedByUser(isLikedByUser)
+                .status(post.getStatus())
                 .build();
     }
 
@@ -81,6 +85,7 @@ public class PostMapper {
         if (dto == null || entity == null) return;
         entity.setTitle(dto.getTitle());
         entity.setContent(dto.getContent());
-        entity.setCategory(dto.getCategory()); // 
+        entity.setCategory(dto.getCategory());
+        if (dto.getPostType() != null) entity.setPostType(dto.getPostType());
     }
 }

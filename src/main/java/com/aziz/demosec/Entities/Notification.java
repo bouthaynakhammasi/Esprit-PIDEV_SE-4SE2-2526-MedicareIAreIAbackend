@@ -1,6 +1,7 @@
 package com.aziz.demosec.Entities;
 
 import com.aziz.demosec.domain.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,11 +34,18 @@ public class Notification {
     @Column(nullable = false, length = 1000)
     private String message;
 
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)
     private NotificationType type;
 
     @Column(nullable = false)
+
+
+
+    @JsonProperty("isRead")
+
+
     private boolean isRead;
 
     @Column(nullable = false)
@@ -46,3 +54,4 @@ public class Notification {
     // Optional: ID of related entity (e.g. post for forum notifications)
     private Long relatedId;
 }
+

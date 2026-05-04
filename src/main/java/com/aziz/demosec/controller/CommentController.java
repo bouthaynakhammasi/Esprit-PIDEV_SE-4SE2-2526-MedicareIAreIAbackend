@@ -3,11 +3,14 @@ package com.aziz.demosec.controller;
 import com.aziz.demosec.dto.CommentRequest;
 import com.aziz.demosec.dto.CommentResponse;
 import com.aziz.demosec.service.CommentService;
-import jakarta.validation.Valid;
+import com.aziz.demosec.service.ContentModerationService;
+import com.aziz.demosec.service.ImageModerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,10 +20,22 @@ import java.util.List;
 public class CommentController {
 
     private final CommentService commentService;
+    private final ContentModerationService contentModerationService;
+    private final ImageModerationService imageModerationService;
 
-    @PostMapping
-    public ResponseEntity<CommentResponse> create(@Valid @RequestBody CommentRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.create(request));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CommentResponse> create(
+            @RequestParam Long postId,
+            @RequestParam Long authorId,
+            @RequestParam String content,
+            @RequestParam(required = false) MultipartFile image) {
+
+        contentModerationService.validateText(content);
+        imageModerationService.validateImage(image);
+
+        CommentRequest request = new CommentRequest(postId, authorId, content);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(commentService.createWithImage(request, image));
     }
 
     @GetMapping
@@ -41,7 +56,8 @@ public class CommentController {
     @PutMapping("/{id}")
     public ResponseEntity<CommentResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody CommentRequest request) {
+            @RequestBody CommentRequest request) {
+        contentModerationService.validateText(request.getContent());
         return ResponseEntity.ok(commentService.update(id, request));
     }
 

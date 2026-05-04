@@ -26,4 +26,12 @@ public interface LabRequestService {
     LabRequestResponse cancel(Long id);
     LabRequestResponse markNotificationSent(Long id);
     List<LabRequestResponse> getPendingByLaboratory(Long laboratoryId);
+    List<LabRequestResponse> getByLaboratoryAndStatusWithDetails(
+            Long laboratoryId, LabRequestStatus status);
+
+    List<LabRequestResponse> searchByPatientLastName(
+            String lastName, LabRequestStatus status);
+
+    List<LabRequestResponse> searchByLaboratoryName(
+            String labName, LabRequestStatus status, String testType);
 }

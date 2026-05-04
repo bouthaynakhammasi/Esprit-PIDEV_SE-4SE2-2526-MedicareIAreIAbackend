@@ -13,6 +13,7 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     boolean existsByName(String name);
     List<Laboratory> findByNameContainingIgnoreCase(String name);
     List<Laboratory> findByActiveTrue();
+    Optional<Laboratory> findByEmail(String email);
 
 }
 

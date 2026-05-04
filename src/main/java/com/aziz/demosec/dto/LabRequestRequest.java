@@ -37,4 +37,7 @@ public class LabRequestRequest {
     // ─── DATE SOUHAITÉE ────────────────────────
     @Future(message = "Scheduled date must be in the future")
     private LocalDateTime scheduledAt;
+
+    @Email(message = "Doctor email must be a valid email address")
+    private String doctorEmail;
 }

@@ -17,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,8 +36,21 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostMapper postMapper;
-    
-    private final String UPLOAD_DIR = "uploads/posts/";
+
+    private static final String UPLOAD_DIR = "uploads/posts/";
+
+    private static final List<String> BAD_WORDS = List.of(
+        "spam", "idiot", "stupid", "hate", "kill", "abuse"
+    );
+
+    private String filterBadWords(String text) {
+        if (text == null) return null;
+        String filtered = text;
+        for (String word : BAD_WORDS) {
+            filtered = filtered.replaceAll("(?i)" + word, "*".repeat(word.length()));
+        }
+        return filtered;
+    }
 
     @Override
     public PostResponse create(@Valid PostRequest request, MultipartFile image) {
@@ -74,7 +89,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostResponse> getAll() {
-        return postRepository.findAll()
+        return postRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(postMapper::toDto)
                 .collect(Collectors.toList());
@@ -90,18 +105,40 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponse update(Long id, @Valid PostRequest request) {
-        log.info(" Mise à jour du post - ID: {}, Titre: {}", id, request.getTitle());
-        
+    public List<PostResponse> search(String keyword) {
+        return postRepository
+                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(keyword, keyword)
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostResponse> getByAuthorId(Long authorId) {
+        return postRepository.findByAuthorId(authorId)
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PostResponse update(Long id, @Valid PostRequest request, MultipartFile image) {
+        log.info("Mise à jour du post - ID: {}, Titre: {}", id, request.getTitle());
+
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Post not found with id: " + id));
 
+        checkOwnership(post);
+
         postMapper.updateFromDto(request, post);
 
-        // Mise à jour catégorie
         if (request.getCategory() != null) {
             post.setCategory(request.getCategory());
+        }
+
+        if (image != null && !image.isEmpty()) {
+            post.setImageUrl(saveImage(image));
         }
 
         return postMapper.toDto(postRepository.save(post));
@@ -109,10 +146,37 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void delete(Long id) {
-        if (!postRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Post not found with id: " + id);
-        }
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+
+        checkOwnership(post);
+
         postRepository.deleteById(id);
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        return userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + auth.getName()));
+    }
+
+    private static final java.util.Set<String> MEDICAL_ROLES = java.util.Set.of(
+        "DOCTOR", "CLINIC", "PHARMACIST", "LABORATORY_STAFF",
+        "NUTRITIONIST", "HOME_CARE_PROVIDER"
+    );
+
+    private void checkOwnership(Post post) {
+        User currentUser = getCurrentUser();
+        String role = currentUser.getRole().name();
+        boolean isAdmin = role.equals("ADMIN");
+        boolean isMedicalStaffAndAuthor = MEDICAL_ROLES.contains(role)
+                && post.getAuthor().getId().equals(currentUser.getId());
+        if (!isAdmin && !isMedicalStaffAndAuthor) {
+            throw new AccessDeniedException("You are not allowed to modify this post");
+        }
     }
 
     private String saveImage(MultipartFile image) {

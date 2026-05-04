@@ -22,6 +22,7 @@ public class PostRequest {
     @Size(min = 10, message = "Content must be at least 10 characters")
     private String content;
 
-    // ✅ Catégorie ajoutée
     private String category;
+
+    private String postType; // DISCUSSION | ALERT | CLINICAL_CASE
 }

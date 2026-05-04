@@ -14,6 +14,7 @@ public class LabRequestMapper {
                 .testType(dto.getTestType())
                 .clinicalNotes(dto.getClinicalNotes())
                 .scheduledAt(dto.getScheduledAt())
+                .doctorEmail(dto.getDoctorEmail())
                 .build();
     }
 
@@ -30,6 +31,7 @@ public class LabRequestMapper {
                 .status(labRequest.getStatus())
                 .testType(labRequest.getTestType())
                 .clinicalNotes(labRequest.getClinicalNotes())
+                .doctorEmail(labRequest.getDoctorEmail())
                 .scheduledAt(labRequest.getScheduledAt())
                 .requestedAt(labRequest.getRequestedAt())
                 .notificationSent(labRequest.isNotificationSent())
@@ -41,6 +43,7 @@ public class LabRequestMapper {
         entity.setTestType(dto.getTestType());
         entity.setClinicalNotes(dto.getClinicalNotes());
         entity.setScheduledAt(dto.getScheduledAt());
+        entity.setDoctorEmail(dto.getDoctorEmail());
         if (dto.getRequestedBy() != null) {
             entity.setRequestedBy(dto.getRequestedBy());
         }

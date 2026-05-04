@@ -22,6 +22,8 @@ public class PostUploadRequest {
     @NotNull(message = "Category is required")
     private String category;
 
+    private String postType; // DISCUSSION | ALERT | CLINICAL_CASE
+
     @NotNull(message = "Author ID is required")
     private Long authorId;
 }

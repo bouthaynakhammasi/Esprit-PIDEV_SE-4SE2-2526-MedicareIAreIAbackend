@@ -48,15 +48,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2. Read Authorization header
+        // 2️⃣ Read JWT — from Authorization header OR ?token= query param (SSE)
+
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("JWT filter skip: method={}, uri={}, hasAuthHeader={}", request.getMethod(), path, authHeader != null);
+        String jwt = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else if (request.getParameter("token") != null) {
+            jwt = request.getParameter("token");
+        }
+
+        if (jwt == null) {
+            log.debug("JWT filter skip: method={}, uri={}", request.getMethod(), path);
             filterChain.doFilter(request, response);
             return;
         }
-
-        String jwt = authHeader.substring(7);
         String userEmail;
 
         try {
