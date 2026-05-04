@@ -62,7 +62,9 @@ public record RegisterRequest(
         String pharmacyName,
         String pharmacyAddress,
         String pharmacyPhone,
-        String pharmacyEmail,
+
+        Double locationLat,
+        Double locationLng,
 
         // Laboratory Fields
         String labName,

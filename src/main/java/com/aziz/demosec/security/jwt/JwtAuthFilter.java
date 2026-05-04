@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import io.jsonwebtoken.ExpiredJwtException;
 
@@ -30,7 +31,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/auth",
             "/api/home-care-services",
-            "/error");
+            "/error",
+            "/ws/**");
 
     @Override
     protected void doFilterInternal(
@@ -40,9 +42,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // 1. Skip public endpoints
+        // 1. Skip public endpoints using AntPathMatcher
+        AntPathMatcher matcher = new AntPathMatcher();
         for (String endpoint : PUBLIC_ENDPOINTS) {
-            if (path.startsWith(endpoint)) {
+            if (matcher.match(endpoint, path)) {
                 filterChain.doFilter(request, response);
                 return;
             }

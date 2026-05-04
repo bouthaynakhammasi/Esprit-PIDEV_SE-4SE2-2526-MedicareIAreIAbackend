@@ -1,6 +1,7 @@
 package com.aziz.demosec.dto.pharmacy;
 
 import com.aziz.demosec.Entities.DeliveryType;
+import com.aziz.demosec.validation.ValidTunisianDeliveryAddress;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ValidTunisianDeliveryAddress
 public class PharmacyOrderRequestDTO {
 
     @NotNull(message = "Patient ID is required")

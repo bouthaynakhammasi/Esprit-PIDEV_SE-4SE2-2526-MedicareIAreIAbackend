@@ -1,11 +1,16 @@
 package com.aziz.demosec.controller;
 
+import com.aziz.demosec.Entities.PharmacyOrderStatus;
+import com.aziz.demosec.Entities.ServiceProvider;
+import com.aziz.demosec.Entities.ServiceRequestStatus;
 import com.aziz.demosec.domain.Role;
 import com.aziz.demosec.domain.User;
+import com.aziz.demosec.dto.admin.GlobalStatsDTO;
+import com.aziz.demosec.repository.PharmacyOrderRepository;
+import com.aziz.demosec.repository.ServiceRequestRepository;
 import com.aziz.demosec.repository.UserRepository;
-import com.aziz.demosec.service.NotificationService;
 import com.aziz.demosec.service.HomeCareManagementService;
-import com.aziz.demosec.Entities.ServiceProvider;
+import com.aziz.demosec.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +25,33 @@ import java.util.List;
 public class AdminController {
 
     private final UserRepository userRepository;
+    private final PharmacyOrderRepository orderRepository;
+    private final ServiceRequestRepository requestRepository;
     private final NotificationService notificationService;
     private final HomeCareManagementService homeCareService;
+
+    @GetMapping("/global-stats")
+    public ResponseEntity<GlobalStatsDTO> getGlobalStats() {
+        GlobalStatsDTO dto = new GlobalStatsDTO(
+            userRepository.count(),
+            userRepository.countByRole(Role.PATIENT),
+            userRepository.countByRole(Role.PHARMACIST),
+            userRepository.countByRole(Role.HOME_CARE_PROVIDER),
+            userRepository.countByRole(Role.DOCTOR),
+            userRepository.countByRole(Role.ADMIN),
+
+            orderRepository.countByStatus(PharmacyOrderStatus.PENDING),
+            orderRepository.countByStatus(PharmacyOrderStatus.DELIVERED),
+            orderRepository.countByStatus(PharmacyOrderStatus.REJECTED),
+            orderRepository.countByStatus(PharmacyOrderStatus.CANCELLED),
+            orderRepository.countByStatus(PharmacyOrderStatus.VALIDATED),
+
+            requestRepository.countByStatus(ServiceRequestStatus.PENDING),
+            requestRepository.countByStatus(ServiceRequestStatus.COMPLETED),
+            requestRepository.countByStatus(ServiceRequestStatus.IN_PROGRESS)
+        );
+        return ResponseEntity.ok(dto);
+    }
 
     @GetMapping("/pending-pharmacists")
     public ResponseEntity<List<User>> getPendingPharmacists() {

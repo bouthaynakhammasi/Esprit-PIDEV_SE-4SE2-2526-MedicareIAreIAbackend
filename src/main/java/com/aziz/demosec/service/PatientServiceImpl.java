@@ -44,10 +44,7 @@ public class PatientServiceImpl implements PatientService {
         patient.setEmergencyContactName(dto.getEmergencyContactName());
         patient.setEmergencyContactPhone(dto.getEmergencyContactPhone());
 
-        // ✅ Nouveaux champs
-        patient.setChronicDiseases(dto.getChronicDiseases());
-        patient.setDrugAllergies(dto.getDrugAllergies());
-        patient.setHereditaryDiseases(dto.getHereditaryDiseases());
+
 
         patient.setEnabled(true);
 
@@ -92,10 +89,6 @@ public class PatientServiceImpl implements PatientService {
         patient.setEmergencyContactName(dto.getEmergencyContactName());
         patient.setEmergencyContactPhone(dto.getEmergencyContactPhone());
 
-        // ✅ Nouveaux champs
-        patient.setChronicDiseases(dto.getChronicDiseases());
-        patient.setDrugAllergies(dto.getDrugAllergies());
-        patient.setHereditaryDiseases(dto.getHereditaryDiseases());
 
         return toDTO(patientRepository.save(patient));
     }
@@ -132,9 +125,6 @@ public class PatientServiceImpl implements PatientService {
                 .bloodType(patient.getBloodType())
                 .emergencyContactName(patient.getEmergencyContactName())
                 .emergencyContactPhone(patient.getEmergencyContactPhone())
-                .chronicDiseases(patient.getChronicDiseases())
-                .drugAllergies(patient.getDrugAllergies())
-                .hereditaryDiseases(patient.getHereditaryDiseases())
                 .build();
     }
 

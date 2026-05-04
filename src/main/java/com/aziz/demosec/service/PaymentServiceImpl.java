@@ -239,6 +239,13 @@ public class PaymentServiceImpl implements PaymentService {
                 });
 
         PaymentGatewayProvider provider = gatewayFactory.getProvider(PaymentMethod.STRIPE);
+
+        // Guard: avoid calling Stripe with an unconfigured (placeholder) API key
+        if (!provider.isConfigured()) {
+            log.warn("Stripe provider is not configured (missing real API key). Cannot create payment intent for order: {}", orderId);
+            throw new RuntimeException("Stripe payment gateway is not configured. Please set a valid STRIPE_API_KEY in application.properties.");
+        }
+
         PaymentGatewayResponse response = provider.createIntent(payment);
 
         if (response.getSuccess()) {

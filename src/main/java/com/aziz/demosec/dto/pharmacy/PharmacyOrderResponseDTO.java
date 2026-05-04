@@ -21,6 +21,7 @@ public class PharmacyOrderResponseDTO {
     private String patientName;
     private Long pharmacyId;
     private String pharmacyName;
+    private String pharmacyAddress;
     private Long prescriptionId;
     private PharmacyOrderStatus status;
     private BigDecimal totalPrice;
@@ -31,6 +32,7 @@ public class PharmacyOrderResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String prescriptionImageUrl;
+    private Integer estimatedDeliveryMin;
     private List<OrderItemResponseDTO> items;
     private List<OrderTrackingResponseDTO> trackingHistory;
 }

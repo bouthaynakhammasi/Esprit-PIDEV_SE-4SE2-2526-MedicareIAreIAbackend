@@ -43,17 +43,6 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = (error instanceof FieldError) ? ((FieldError) error).getField() : error.getObjectName();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.badRequest().body(errors);
-    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
@@ -73,13 +62,29 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<?> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(Map.of(
-                "error", "Method Not Allowed",
-                "message", ex.getMessage(),
-                "supportedMethods", ex.getSupportedHttpMethods() != null ? ex.getSupportedHttpMethods() : "N/A"
-        ));
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+
+        System.out.println("=== VALIDATION ERROR ===");
+
+        Map<String, String> errors = new HashMap<>();
+
+        // Field errors
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            System.out.println("Field: " + error.getField() + " → " + error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        // Global errors (class-level constraints)
+        ex.getBindingResult().getGlobalErrors().forEach(error -> {
+            System.out.println("Global: " + error.getDefaultMessage());
+            errors.put(error.getObjectName(), error.getDefaultMessage());
+        });
+
+        System.out.println("========================");
+
+        return ResponseEntity.badRequest().body(errors);
     }
 
     @ExceptionHandler(Exception.class)

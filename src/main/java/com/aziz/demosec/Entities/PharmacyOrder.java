@@ -63,6 +63,8 @@ public class PharmacyOrder {
     @Enumerated(EnumType.STRING)
     private DeliveryType deliveryType;
 
+    private Integer estimatedDeliveryMin;
+
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

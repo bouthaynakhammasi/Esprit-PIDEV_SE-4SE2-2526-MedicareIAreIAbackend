@@ -37,3 +37,6 @@ build/
 ### Secrets ###
 src/main/resources/application.properties
 
+
+### User Uploads (runtime files, not to be versioned) ###
+uploads/

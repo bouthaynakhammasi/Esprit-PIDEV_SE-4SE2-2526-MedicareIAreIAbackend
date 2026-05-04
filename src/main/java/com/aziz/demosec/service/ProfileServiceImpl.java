@@ -71,7 +71,7 @@ public class ProfileServiceImpl implements IProfileService {
                 if (request.specialties() != null) n.setSpecialties(request.specialties());
                 if (request.yearsOfExperience() != null) n.setYearsOfExperience(request.yearsOfExperience());
                 if (request.bio() != null) n.setBio(request.bio());
-                n.setVerified(false);
+
                 nutritionistRepository.save(n);
                 break;
             }

@@ -19,7 +19,14 @@ public interface LabRequestRepository extends JpaRepository<LabRequest, Long> {
     // MÉTHODES EXISTANTES
     // ═══════════════════════════════════════════════════════════
 
-    List<LabRequest> findByPatientId(Long patientId);
+    @Query("""
+        SELECT lr FROM LabRequest lr
+        LEFT JOIN FETCH lr.laboratory
+        LEFT JOIN FETCH lr.patient
+        LEFT JOIN FETCH lr.doctor
+        WHERE lr.patient.id = :patientId
+    """)
+    List<LabRequest> findByPatientId(@Param("patientId") Long patientId);
     List<LabRequest> findByDoctorId(Long doctorId);
     List<LabRequest> findByLaboratoryId(Long laboratoryId);
     List<LabRequest> findByStatus(LabRequestStatus status);

@@ -25,6 +25,4 @@ public class Nutritionist extends User {
     @Enumerated(EnumType.STRING)
     private ConsultationMode consultationMode;
 
-    @Column(nullable = false)
-    private boolean verified;
 }

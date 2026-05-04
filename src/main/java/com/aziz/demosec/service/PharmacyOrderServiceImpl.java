@@ -38,6 +38,10 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
     private final UserRepository userRepository;
     private final WebSocketNotificationService webSocketNotificationService;
     private final EntityManager entityManager;
+    private final OsrmService osrmService;
+    private final GeocodingService geocodingService;
+    private final DeliveryPredictionService deliveryPredictionService;
+    private final EmailService emailService;
 
     // ──────────────────────────────────────────────────────────────
     // CREATE ORDER (PENDING)
@@ -75,6 +79,39 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
         }
         order.setTotalPrice(total);
 
+        // ML Prediction — uniquement pour HOME_DELIVERY
+        if (dto.getDeliveryType() == DeliveryType.HOME_DELIVERY && dto.getDeliveryAddress() != null) {
+            try {
+                double[] toCoords = geocodingService.getCoordinates(dto.getDeliveryAddress());
+                System.out.println("[ML] Delivery address: " + dto.getDeliveryAddress()
+                        + " → coords: " + toCoords[0] + ", " + toCoords[1]);
+
+                double distanceKm;
+
+                // Utiliser les coordonnées GPS de la pharmacie si disponibles
+                if (pharmacy.getLocationLat() != null && pharmacy.getLocationLng() != null) {
+                    System.out.println("[ML] Pharmacy GPS: " + pharmacy.getLocationLat() + ", " + pharmacy.getLocationLng());
+                    distanceKm = osrmService.getDistanceKmByCoords(
+                        pharmacy.getLocationLat(), pharmacy.getLocationLng(),
+                        toCoords[0], toCoords[1]
+                    );
+                } else {
+                    System.out.println("[ML] No pharmacy GPS — using address geocoding");
+                    distanceKm = osrmService.getDistanceKm(pharmacy.getAddress(), dto.getDeliveryAddress());
+                }
+
+                System.out.println("[ML] Computed distance: " + distanceKm + " km");
+
+                String city = geocodingService.extractCity(dto.getDeliveryAddress());
+                System.out.println("[ML] Extracted city: " + city + ", items: " + dto.getItems().size());
+                int prediction = deliveryPredictionService.predict(distanceKm, city, dto.getItems().size());
+                System.out.println("[ML] Predicted delivery: " + prediction + " min");
+                order.setEstimatedDeliveryMin(prediction);
+            } catch (Exception e) {
+                System.err.println("ML prediction skipped: " + e.getMessage());
+            }
+        }
+
         PharmacyOrder saved = orderRepository.save(order);
 
         // Save order items
@@ -97,6 +134,23 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
         notifyPharmacy(pharmacy, saved, NotificationType.ORDER_CREATED,
                 "Nouvelle commande #" + saved.getId(),
                 "Un patient a passé une nouvelle commande nécessitant validation.");
+
+        // Email confirmation to patient
+        try {
+            User patient = saved.getPatient();
+            if (patient != null && patient.getEmail() != null) {
+                emailService.sendOrderConfirmation(
+                        patient.getEmail(),
+                        patient.getFullName(),
+                        saved.getId(),
+                        pharmacy.getName(),
+                        saved.getTotalPrice(),
+                        saved.getEstimatedDeliveryMin()
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("Email order confirmation failed: " + e.getMessage());
+        }
 
         return toDTO(orderRepository.findById(saved.getId()).orElseThrow());
     }
@@ -145,6 +199,8 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
                 notifyUser(order.getPatient(), order, NotificationType.DELIVERY_CHOICE_REQUIRED,
                         "Commande validée ✅",
                         "Votre commande #" + orderId + " est validée. Choisissez votre mode de réception.");
+                // Email
+                sendStatusEmail(order, "VALIDATED", dto.getNote());
             }
             case PAID -> {
                 // Payment confirmed → notify pharmacist
@@ -181,11 +237,13 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
                 notifyUser(order.getPatient(), order, NotificationType.OUT_FOR_DELIVERY,
                         "En route 🚚",
                         "Votre commande #" + orderId + " est en route vers vous !");
+                sendStatusEmail(order, "OUT_FOR_DELIVERY", null);
             }
             case DELIVERED -> {
                 notifyUser(order.getPatient(), order, NotificationType.DELIVERED,
                         "Livraison effectuée ✅",
                         "Votre commande #" + orderId + " a été livrée avec succès.");
+                sendStatusEmail(order, "DELIVERED", null);
             }
             default -> {
                 /* no extra action */ }
@@ -272,19 +330,14 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
             if (note != null && note.length() > 950)
                 note = note.substring(0, 947) + "...";
 
-            // Use JPQL for atomic update (avoids full entity save + constraint issues)
-            String actor = dto.getChangedBy() != null ? dto.getChangedBy() : "PHARMACIST";
+            // Note: clearAutomatically = true in repository handles cache eviction
             orderRepository.updateOrderStatusWithNote(orderId, PharmacyOrderStatus.REJECTED, note, LocalDateTime.now());
-
-            // Force Hibernate to flush and clear the cache to avoid stale data
-            entityManager.flush();
-            entityManager.clear();
 
             // Re-fetch fresh state
             PharmacyOrder saved = findOrderOrThrow(orderId);
 
             // Log tracking entry
-            addTracking(saved, PharmacyOrderStatus.REJECTED, note, actor);
+            addTracking(saved, PharmacyOrderStatus.REJECTED, note, dto.getChangedBy() != null ? dto.getChangedBy() : "PHARMACIST");
 
             // Notify patient
             String message = "Votre commande #" + orderId + " a été refusée : " + note;
@@ -293,6 +346,9 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
 
             notifyUser(saved.getPatient(), saved, NotificationType.ORDER_REJECTED,
                     "Commande refusée ❌", message);
+
+            // Email rejection to patient
+            sendStatusEmail(saved, "REJECTED", note);
 
             System.out.println(">>> ORDER #" + orderId + " REJECTED SUCCESSFULLY");
             return toDTO(saved);
@@ -494,6 +550,23 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
         }
     }
 
+    private void sendStatusEmail(PharmacyOrder order, String status, String note) {
+        try {
+            User patient = order.getPatient();
+            if (patient != null && patient.getEmail() != null) {
+                emailService.sendOrderStatusUpdate(
+                        patient.getEmail(),
+                        patient.getFullName(),
+                        order.getId(),
+                        status,
+                        note
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("Email status update failed for order #" + order.getId() + ": " + e.getMessage());
+        }
+    }
+
     private PharmacyOrder findOrderOrThrow(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + id));
@@ -514,6 +587,7 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
                 .patientName(o.getPatient() != null ? o.getPatient().getFullName() : null)
                 .pharmacyId(o.getPharmacy() != null ? o.getPharmacy().getId() : null)
                 .pharmacyName(o.getPharmacy() != null ? o.getPharmacy().getName() : null)
+                .pharmacyAddress(o.getPharmacy() != null ? o.getPharmacy().getAddress() : null)
                 .prescriptionId(o.getPrescription() != null ? o.getPrescription().getId() : null)
                 .status(o.getStatus())
                 .totalPrice(o.getTotalPrice())
@@ -521,6 +595,7 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
                 .scheduledDeliveryDate(o.getScheduledDeliveryDate())
                 .prescriptionImageUrl(o.getPrescriptionImageUrl())
                 .deliveryType(o.getDeliveryType())
+                .estimatedDeliveryMin(o.getEstimatedDeliveryMin())
                 .pharmacistNote(o.getPharmacistNote())
                 .createdAt(o.getCreatedAt())
                 .updatedAt(o.getUpdatedAt())
@@ -566,6 +641,40 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
                 .build();
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public RouteResponseDTO getOrderRoute(Long orderId) {
+        PharmacyOrder order = findOrderOrThrow(orderId);
+        if (order.getDeliveryAddress() == null) return null;
+
+        Pharmacy pharmacy = order.getPharmacy();
+        double[] toCoords = geocodingService.getCoordinates(order.getDeliveryAddress());
+
+        if (pharmacy.getLocationLat() != null && pharmacy.getLocationLng() != null) {
+            return osrmService.getRouteByCoords(
+                pharmacy.getLocationLat(), pharmacy.getLocationLng(),
+                toCoords[0], toCoords[1]
+            );
+        } else {
+            return osrmService.getRoute(pharmacy.getAddress(), order.getDeliveryAddress());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductSalesStatsDTO> getProductSalesStats(Long pharmacyId) {
+        return orderRepository.findProductSalesStatsByPharmacy(pharmacyId);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PharmacyOrderResponseDTO> getByPharmacyNameAndStatus(String pharmacyName, PharmacyOrderStatus status) {
+        return orderRepository.findByPharmacy_NameContainingIgnoreCaseAndStatus(pharmacyName, status)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     @Override
     @Transactional
     public void addOrderItem(Long orderId, Long productId, int quantity) {
@@ -573,11 +682,10 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        // On récupère le prix depuis le stock de la pharmacie concernée
         PharmacyStock stock = stockRepository.findByPharmacy_IdAndProduct_Id(order.getPharmacy().getId(), productId)
                 .orElseThrow(() -> new IllegalStateException("Product not in pharmacy stock"));
 
-        // Affectation Complexe (ManyToMany indirect via List d'entités liées)
+
         OrderItem item = new OrderItem();
         item.setOrder(order);
         item.setProduct(product);
@@ -586,9 +694,42 @@ public class PharmacyOrderServiceImpl implements PharmacyOrderService {
 
         order.getItems().add(item);
 
-        // Mise à jour du prix total de la commande (Affectation Simple)
+
         order.setTotalPrice(order.getTotalPrice().add(item.getPrice()));
 
         orderRepository.save(order);
+    }
+
+    // ── Advanced: JPQL Aging Report ───────────────────────────────
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderAgingDTO> getOrdersAging() {
+        return orderRepository.findOrdersAging(
+                List.of(PharmacyOrderStatus.PENDING, PharmacyOrderStatus.REVIEWING));
+    }
+
+    // ── Advanced: Escalation Scheduler ───────────────────────────
+    @Override
+    @Transactional
+    public int escalateStalledOrders() {
+        LocalDateTime threshold = LocalDateTime.now().minusHours(1);
+        List<PharmacyOrder> stalled = orderRepository
+                .findByStatusAndCreatedAtBefore(PharmacyOrderStatus.PENDING, threshold);
+
+        for (PharmacyOrder order : stalled) {
+            order.setStatus(PharmacyOrderStatus.REVIEWING);
+            order.setPharmacistNote(
+                    "Auto-escalated: pending for over 1 hour without pharmacist review.");
+            order.setUpdatedAt(LocalDateTime.now());
+            orderRepository.save(order);
+
+            addTracking(order, PharmacyOrderStatus.REVIEWING,
+                    "Auto-escalated by system: order pending for over 1 hour.", "SYSTEM");
+
+            notifyPharmacy(order.getPharmacy(), order, NotificationType.ORDER_CREATED,
+                    "⚠️ Order Escalated #" + order.getId(),
+                    "Order #" + order.getId() + " has been waiting for over 1 hour. Immediate review required.");
+        }
+        return stalled.size();
     }
 }

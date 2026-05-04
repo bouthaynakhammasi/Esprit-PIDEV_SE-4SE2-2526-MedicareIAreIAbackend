@@ -15,6 +15,10 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByStatusOrderByCreatedAtDesc(ServiceRequestStatus status);
     List<ServiceRequest> findAllByOrderByCreatedAtDesc();
 
+    long countByStatus(ServiceRequestStatus status);
+
+    int countByAssignedProvider_IdAndStatusIn(Long providerId, List<ServiceRequestStatus> statuses);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE ServiceRequest r SET r.status = :status WHERE r.id = :id")
     void updateStatus(@org.springframework.data.repository.query.Param("id") Long id, @org.springframework.data.repository.query.Param("status") ServiceRequestStatus status);

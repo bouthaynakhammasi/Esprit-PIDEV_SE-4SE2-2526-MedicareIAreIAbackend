@@ -1,6 +1,5 @@
 package com.aziz.demosec.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
@@ -22,14 +21,6 @@ import com.aziz.demosec.repository.PaymentRepository;
 import com.aziz.demosec.payment.PaymentWebSocketService;
 import com.aziz.demosec.service.PaymentService;
 
-/**
- * Webhook Controller for Payment Gateway Callbacks
- * Handles Stripe and D17 webhook notifications
- * 
- * Endpoints:
- * - POST /api/pharmacy/payments/webhook/stripe
- * - POST /api/pharmacy/payments/webhook/d17
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/pharmacy/payments/webhook")

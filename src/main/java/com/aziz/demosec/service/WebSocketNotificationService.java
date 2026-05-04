@@ -2,6 +2,7 @@ package com.aziz.demosec.service;
 
 import com.aziz.demosec.Entities.Notification;
 import com.aziz.demosec.dto.pharmacy.NotificationResponseDTO;
+import com.aziz.demosec.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class WebSocketNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     /**
      * Envoie une notification à un utilisateur spécifique via WebSocket.
@@ -30,18 +32,17 @@ public class WebSocketNotificationService {
             return;
         }
 
-        // Convertir l'entité en DTO
+        String email = userRepository.findById(userId)
+                .map(u -> u.getEmail())
+                .orElse(null);
+        if (email == null) {
+            System.err.println("❌ Cannot send notification - user not found: " + userId);
+            return;
+        }
+
         NotificationResponseDTO dto = convertToDTO(notification);
-
-        // Envoyer UNIQUEMENT à l'utilisateur spécifié
-        // La destination sera: /user/{userId}/queue/notifications
-        messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "/queue/notifications",
-                dto
-        );
-
-        System.out.println("✅ Notification sent to user #" + userId + ": " + notification.getTitle());
+        messagingTemplate.convertAndSendToUser(email, "/queue/notifications", dto);
+        System.out.println("✅ Notification sent to " + email + ": " + notification.getTitle());
     }
 
     /**
@@ -72,19 +73,17 @@ public class WebSocketNotificationService {
     public void notifyOrderStatusUpdate(Long userId, Long orderId, String status, String message) {
         if (userId == null) return;
 
+        String email = userRepository.findById(userId).map(u -> u.getEmail()).orElse(null);
+        if (email == null) return;
+
         var update = new java.util.HashMap<String, Object>();
         update.put("orderId", orderId);
         update.put("status", status);
         update.put("message", message);
         update.put("timestamp", java.time.LocalDateTime.now());
 
-        messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "/queue/order-updates",
-                update
-        );
-
-        System.out.println("✅ Order update sent to user #" + userId + " - Order #" + orderId + " status: " + status);
+        messagingTemplate.convertAndSendToUser(email, "/queue/order-updates", update);
+        System.out.println("✅ Order update sent to " + email + " - Order #" + orderId + " status: " + status);
     }
 
     /**
@@ -97,18 +96,16 @@ public class WebSocketNotificationService {
     public void notifyPayment(Long userId, Long orderId, String message) {
         if (userId == null) return;
 
+        String email = userRepository.findById(userId).map(u -> u.getEmail()).orElse(null);
+        if (email == null) return;
+
         var payment = new java.util.HashMap<String, Object>();
         payment.put("orderId", orderId);
         payment.put("message", message);
         payment.put("timestamp", java.time.LocalDateTime.now());
 
-        messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "/queue/payments",
-                payment
-        );
-
-        System.out.println("💰 Payment notification sent to user #" + userId);
+        messagingTemplate.convertAndSendToUser(email, "/queue/payments", payment);
+        System.out.println("💰 Payment notification sent to " + email);
     }
 
     // ─────────────────────────────────────────────

@@ -18,7 +18,7 @@ import java.util.List;
 public class LaboratoryController {
 
     private final LaboratoryService laboratoryService;
-    
+
     @GetMapping("/me")
     public ResponseEntity<LaboratoryResponse> getMyLaboratory(Authentication authentication) {
         return ResponseEntity.ok(laboratoryService.getMyLaboratory(authentication.getName()));

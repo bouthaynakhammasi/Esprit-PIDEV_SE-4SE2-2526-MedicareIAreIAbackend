@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/LENOVO/IdeaProjects/careiq-ml/data/raw/Food_Delivery_Times.csv/**)",
+      "Read(//c/Users/LENOVO/IdeaProjects/careiq-ml/**)",
+      "Bash(mvn compile *)",
+      "Bash(npx tsc *)",
+      "Bash(\"C:\\\\Users\\\\LENOVO\\\\Angular_Workspace\\\\medicarepi\\\\node_modules\\\\.bin\\\\tsc\" --noEmit --project \"C:\\\\Users\\\\LENOVO\\\\Angular_Workspace\\\\medicarepi\\\\tsconfig.app.json\")",
+      "Bash(npm install *)",
+      "Bash(xargs grep *)",
+      "Bash(venv/Scripts/python.exe -c \"import sklearn; import joblib; print\\('sklearn OK'\\); print\\(sklearn.__version__\\)\")",
+      "Bash(venv/Scripts/pip.exe install *)",
+      "Bash(venv/Scripts/python.exe -m uvicorn main:app --reload --port 8000)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi\\src\\app\\models",
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi\\src\\app\\services",
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi\\src\\app\\features\\front-office\\pharmacist\\pages\\pharmacist-dashboard",
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi\\src\\app\\features\\back-office\\pages\\admin-requests",
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi\\src\\app\\features\\front-office\\patient\\pages\\pharmacy-order-detail",
+      "C:\\Users\\LENOVO\\Angular_Workspace\\medicarepi",
+      "C:\\Users\\LENOVO\\IdeaProjects\\careiq-ml"
+    ]
+  }
+}

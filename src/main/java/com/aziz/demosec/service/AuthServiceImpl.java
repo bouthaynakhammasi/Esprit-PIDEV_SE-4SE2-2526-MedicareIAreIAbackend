@@ -84,7 +84,6 @@ public class AuthServiceImpl implements AuthService {
         // CAS PATIENT
         // =========================
         if (req.role() == Role.PATIENT) {
-
             Patient patient = new Patient();
             patient.setFullName(req.fullName() == null ? "Not Available" : req.fullName());
             patient.setEmail(req.email());
@@ -97,12 +96,11 @@ public class AuthServiceImpl implements AuthService {
             patient.setBloodType(req.bloodType());
             patient.setEmergencyContactName(req.emergencyContactName());
             patient.setEmergencyContactPhone(req.emergencyContactPhone());
-
-            // ✅ NOUVEAUX CHAMPS AJOUTÉS
-            patient.setChronicDiseases(req.chronicDiseases());
-            patient.setDrugAllergies(req.drugAllergies());
-            patient.setHereditaryDiseases(req.hereditaryDiseases());
-
+            patient.setGlucoseRate(req.glucoseRate());
+            patient.setAllergies(req.allergies());
+            patient.setDiseases(req.diseases());
+            patient.setHeight(req.height());
+            patient.setWeight(req.weight());
             patient.setEnabled(true);
 
             return patientRepository.save(patient);
@@ -121,7 +119,9 @@ public class AuthServiceImpl implements AuthService {
                     .name(req.pharmacyName())
                     .address(req.pharmacyAddress() != null ? req.pharmacyAddress() : "")
                     .phoneNumber(req.pharmacyPhone() != null ? req.pharmacyPhone() : "")
-                    .email(req.email()) // Optionnel: utiliser l'email du pharmacien
+                    .email(req.email())
+                    .locationLat(req.locationLat())
+                    .locationLng(req.locationLng())
                     .build();
             newPharmacy = pharmacyRepository.save(newPharmacy);
 
@@ -218,7 +218,7 @@ public class AuthServiceImpl implements AuthService {
             nutritionist.setBirthDate(req.birthDate());
             nutritionist.setProfessionalDocument(documentUrl);
             nutritionist.setEnabled(true);
-            nutritionist.setVerified(true);
+
 
             // Set required Nutritionist-specific fields
             nutritionist.setLicenseNumber(req.licenseNumber() != null ? req.licenseNumber() : "PENDING_" + System.currentTimeMillis());

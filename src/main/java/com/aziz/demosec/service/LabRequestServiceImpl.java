@@ -10,6 +10,7 @@ import com.aziz.demosec.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,6 +127,7 @@ public class LabRequestServiceImpl implements LabRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LabRequestResponse> getByPatient(Long patientId) {
         log.info("🔍 REQUÊTE BASE - Patient ID: {}", patientId);
         List<LabRequest> requests = labRequestRepository.findByPatientId(patientId);

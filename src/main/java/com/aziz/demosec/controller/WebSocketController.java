@@ -9,15 +9,6 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
-
-/**
- * Contrôleur WebSocket pour gérer les messages en temps réel.
- * 
- * Les clients se connectent via /ws et peuvent s'abonner à :
- * - /user/{username}/queue/notifications
- * - /user/{username}/queue/order-updates
- * - /user/{username}/queue/payments
- */
 @Controller
 @RequiredArgsConstructor
 public class WebSocketController {

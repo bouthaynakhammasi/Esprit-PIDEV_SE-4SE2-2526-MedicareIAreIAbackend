@@ -88,6 +88,7 @@ class PaymentServiceTest {
 
         PaymentGatewayProvider stripeProvider = mock(PaymentGatewayProvider.class);
         when(gatewayFactory.getProvider(PaymentMethod.STRIPE)).thenReturn(stripeProvider);
+        when(stripeProvider.isConfigured()).thenReturn(true);
         
         PaymentGatewayResponse gatewayResponse = PaymentGatewayResponse.builder()
                 .success(true)

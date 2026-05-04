@@ -90,7 +90,7 @@ public class LaboratoryServiceImpl implements LaboratoryService {
         if (staff.isPresent() && staff.get().getLaboratory() != null) {
             return laboratoryMapper.toDto(staff.get().getLaboratory());
         }
-        
+
         // Fallback: Try to find a laboratory by email directly (for older registrations)
         Optional<Laboratory> lab = laboratoryRepository.findByEmail(email);
         if (lab.isPresent()) {
@@ -112,9 +112,9 @@ public class LaboratoryServiceImpl implements LaboratoryService {
                 .address("Auto-generated Address")
                 .active(true)
                 .build();
-        
+
         defaultLab = laboratoryRepository.save(defaultLab);
-        
+
         if (staff.isPresent()) {
             LaboratoryStaff s = staff.get();
             s.setLaboratory(defaultLab);
@@ -147,7 +147,7 @@ public class LaboratoryServiceImpl implements LaboratoryService {
             if (request.openingHours() != null) laboratory.setOpeningHours(request.openingHours());
             if (request.specializations() != null) laboratory.setSpecializations(request.specializations());
             if (request.active() != null) laboratory.setActive(request.active());
-            
+
             laboratoryRepository.save(laboratory);
         }
 

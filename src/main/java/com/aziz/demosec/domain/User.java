@@ -59,4 +59,5 @@ public class User {
 
     public String getProfileImage() { return this.profileImage; }
     public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
+
 }

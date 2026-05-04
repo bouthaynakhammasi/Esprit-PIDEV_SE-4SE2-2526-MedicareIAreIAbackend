@@ -2,7 +2,9 @@ package com.aziz.demosec.controller;
 
 import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.dto.homecare.*;
+import com.aziz.demosec.service.HomeCareAssignmentService;
 import com.aziz.demosec.service.HomeCareManagementService;
+import com.aziz.demosec.service.ServiceRecommendationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,6 +30,16 @@ public class HomeCareController {
     private static final Logger log = LoggerFactory.getLogger(HomeCareController.class);
 
     private final HomeCareManagementService homeCareService;
+    private final HomeCareAssignmentService assignmentService;
+    private final ServiceRecommendationService recommendationService;
+
+    // ── AI Symptom Recommendation ─────────────────────────────────────────
+    @PostMapping("/recommend-service")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<ServiceRecommendationDTO> recommendService(
+            @Valid @RequestBody SymptomCheckRequestDTO dto) {
+        return ResponseEntity.ok(recommendationService.recommend(dto));
+    }
 
     // ── Catalogue (PUBLIC) ─────────────────────────────────────────────────
 
@@ -313,5 +325,53 @@ public class HomeCareController {
             @PathVariable("id") Long id,
             @RequestBody HomeCareService service) {
         return ResponseEntity.ok(homeCareService.updateService(id, service));
+    }
+
+    // ── Fast Booking (PATIENT) ─────────────────────────────────────────────
+
+    @PostMapping("/requests/fast-book")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<FastBookResultDTO> fastBook(
+            @AuthenticationPrincipal UserDetails user,
+            @Valid @RequestBody FastBookRequestDTO dto) {
+
+        List<ProviderScoreDTO> ranked = assignmentService.rankProviders(dto.getServiceId(), dto.getRequestedDateTime());
+        ProviderScoreDTO best = ranked.stream()
+                .filter(ProviderScoreDTO::isAvailable)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Aucun prestataire disponible pour ce créneau."));
+
+        CreateServiceRequestDTO createDto = new CreateServiceRequestDTO();
+        createDto.setServiceId(dto.getServiceId());
+        createDto.setRequestedDateTime(dto.getRequestedDateTime());
+        createDto.setAddress(dto.getAddress());
+        createDto.setPatientNotes(dto.getPatientNotes() != null ? dto.getPatientNotes() : "Fast Booking");
+        createDto.setProviderId(best.getProviderId());
+
+        ServiceRequest req = homeCareService.createRequest(user.getUsername(), createDto);
+
+        return ResponseEntity.ok(FastBookResultDTO.builder()
+                .requestId(req.getId())
+                .providerName(best.getProviderName())
+                .providerRating(best.getRating())
+                .serviceName(req.getService().getName())
+                .requestedDateTime(dto.getRequestedDateTime())
+                .build());
+    }
+
+    // ── Assignment Service (ADMIN) ─────────────────────────────────────────
+
+    @PostMapping("/admin/requests/{id}/auto-assign")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AssignmentResultDTO> autoAssign(@PathVariable("id") Long requestId) {
+        return ResponseEntity.ok(assignmentService.autoAssign(requestId));
+    }
+
+    @GetMapping("/admin/services/{serviceId}/rank-providers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProviderScoreDTO>> rankProviders(
+            @PathVariable("serviceId") Long serviceId,
+            @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime) {
+        return ResponseEntity.ok(assignmentService.rankProviders(serviceId, dateTime));
     }
 }

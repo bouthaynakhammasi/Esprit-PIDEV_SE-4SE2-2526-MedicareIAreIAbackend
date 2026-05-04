@@ -33,4 +33,3 @@ public class Laboratory {
     @OneToMany(mappedBy = "laboratory", cascade = CascadeType.ALL)
     private List<LabTest> labTests;
 }
-//rbhtnyjkushdrnjt,y

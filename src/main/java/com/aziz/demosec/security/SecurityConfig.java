@@ -47,7 +47,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider authProvider) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
@@ -130,7 +129,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/patient/**", "/patient/**").hasRole("PATIENT")
                         .requestMatchers("/api/baby-care/**").hasAnyRole("PATIENT", "ADMIN")
                         .requestMatchers("/api/home-care/**").hasRole("HOME_CARE_PROVIDER")
-                        .requestMatchers("/api/homecare/provider/**").hasRole("HOME_CARE_PROVIDER")
+                                                .requestMatchers("/api/homecare/provider/**").hasAnyAuthority("HOME_CARE_PROVIDER", "ROLE_HOME_CARE_PROVIDER")
 
 
                         // Pharmacy orders
@@ -155,8 +154,10 @@ public class SecurityConfig {
                         .requestMatchers("/availability/**", "/provider-calendar/**")
                             .hasAnyRole("DOCTOR", "NUTRITIONIST", "HOME_CARE_PROVIDER")
 
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
+                .csrf(csrf -> csrf.disable()) // For JWT APIs, usually disabled
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
