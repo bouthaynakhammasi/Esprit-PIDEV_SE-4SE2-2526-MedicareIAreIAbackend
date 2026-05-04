@@ -1,60 +1,49 @@
 name: Build and deploy JAR app to Azure Web App - medicareaipi
-
 on:
   push:
     branches:
       - Esprit-PIDEV_SE-4SE2-2526-MedicareIAreIAbackendprod
   workflow_dispatch:
-
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'microsoft'
-
-      - name: Delete test files
+      - name: Force create HealthThresholds
         run: |
-          Remove-Item -Recurse -Force src/test/java/com/aziz/demosec/service
-          Remove-Item -Recurse -Force src/test/java/com/aziz/demosec/controller
-
+          mkdir -p src/main/java/com/aziz/demosec/Config
+          printf 'package com.aziz.demosec.Config;\nimport org.springframework.boot.context.properties.ConfigurationProperties;\nimport org.springframework.stereotype.Component;\nimport lombok.Getter;\nimport lombok.Setter;\n@Component\n@ConfigurationProperties(prefix = "health.thresholds")\n@Getter @Setter\npublic class HealthThresholds {\n    private int overeatingSurplus = 300;\n    private int undereatingSurplus = 300;\n    private double noProgressWeightDelta = 0.1;\n    private int noProgressDaysWindow = 7;\n}\n' > src/main/java/com/aziz/demosec/Config/HealthThresholds.java
       - name: Build with Maven
-        run: mvn clean package "-DskipTests" -e
-
+        run: mvn clean package -DskipTests
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
           path: '${{ github.workspace }}/target/*.jar'
-
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build
     permissions:
       id-token: write
       contents: read
-
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: java-app
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_170291083432443996CDDB5F3441BE29 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E7FA60908AC544C895D728C1B984E635 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA7F23DE913F4D969DF6F95BDDD30078 }}
-
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
