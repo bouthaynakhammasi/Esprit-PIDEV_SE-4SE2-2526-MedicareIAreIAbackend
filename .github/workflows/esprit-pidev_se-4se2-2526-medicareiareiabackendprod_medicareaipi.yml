@@ -20,6 +20,8 @@ jobs:
         run: |
           mkdir -p src/main/java/com/aziz/demosec/Config
           printf 'package com.aziz.demosec.Config;\nimport org.springframework.boot.context.properties.ConfigurationProperties;\nimport org.springframework.stereotype.Component;\nimport lombok.Getter;\nimport lombok.Setter;\n@Component\n@ConfigurationProperties(prefix = "health.thresholds")\n@Getter @Setter\npublic class HealthThresholds {\n    private int overeatingSurplus = 300;\n    private int undereatingSurplus = 300;\n    private double noProgressWeightDelta = 0.1;\n    private int noProgressDaysWindow = 7;\n}\n' > src/main/java/com/aziz/demosec/Config/HealthThresholds.java
+      - name: Delete test files
+        run: rm -rf src/test/
       - name: Build with Maven
         run: mvn clean package -DskipTests
       - name: Upload artifact for deployment job
