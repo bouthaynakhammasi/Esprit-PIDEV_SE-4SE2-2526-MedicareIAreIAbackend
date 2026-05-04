@@ -1,7 +1,10 @@
 package com.aziz.demosec.service;
 
+import com.aziz.demosec.Entities.HealthyRecipe;
+import com.aziz.demosec.Entities.LifestylePlan;
 import com.aziz.demosec.dto.MealPlanDTO;
-import com.aziz.demosec.Entities.*;
+import com.aziz.demosec.Entities.MealPlan;
+import com.aziz.demosec.Entities.Patient;
 import com.aziz.demosec.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

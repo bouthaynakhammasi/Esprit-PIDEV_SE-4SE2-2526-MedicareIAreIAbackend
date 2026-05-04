@@ -1,6 +1,6 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.EmailVerificationCode;
+import com.aziz.demosec.Entities.EmailVerificationCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

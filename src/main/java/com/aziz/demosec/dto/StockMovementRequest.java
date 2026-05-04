@@ -1,6 +1,6 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.StockMovementType;
+import com.aziz.demosec.Entities.StockMovementType;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 

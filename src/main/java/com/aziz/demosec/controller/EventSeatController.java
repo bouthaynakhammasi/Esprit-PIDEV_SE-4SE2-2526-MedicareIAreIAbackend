@@ -4,7 +4,7 @@ import com.aziz.demosec.dto.SaveSeatRequest;
 import com.aziz.demosec.dto.SeatingStatsResponse;
 import com.aziz.demosec.dto.SeatResponse;
 import com.aziz.demosec.dto.SeatZoneSummaryResponse;
-import com.aziz.demosec.entities.VenueType;
+import com.aziz.demosec.Entities.VenueType;
 import com.aziz.demosec.service.IEventSeatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

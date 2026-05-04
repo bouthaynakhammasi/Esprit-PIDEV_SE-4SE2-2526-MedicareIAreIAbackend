@@ -1,12 +1,9 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.MedicalEventType;
-import com.aziz.demosec.entities.VenueType;
+import com.aziz.demosec.Entities.MedicalEventType;
+import com.aziz.demosec.Entities.VenueType;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-
-import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDate;
 
 @Data
 public class MedicalEventCreateRequest {

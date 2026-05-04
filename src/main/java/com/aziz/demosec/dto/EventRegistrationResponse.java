@@ -1,6 +1,6 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.RegistrationStatus;
+import com.aziz.demosec.Entities.RegistrationStatus;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.aziz.demosec.entities;
+package com.aziz.demosec.Entities;
 
 public enum AidRequestStatus {
     PENDING,

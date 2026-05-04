@@ -2,7 +2,7 @@ package com.aziz.demosec.service;
 
 import com.aziz.demosec.domain.User;
 import com.aziz.demosec.dto.*;
-import com.aziz.demosec.entities.*;
+import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.repository.EventSeatRepository;
 import com.aziz.demosec.repository.MedicalEventRepository;
 import com.aziz.demosec.repository.UserRepository;

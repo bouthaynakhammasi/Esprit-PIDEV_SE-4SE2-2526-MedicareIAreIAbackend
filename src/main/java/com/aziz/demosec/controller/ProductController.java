@@ -20,9 +20,9 @@ public class ProductController {
 
     private void checkPharmacistGuard(org.springframework.security.core.Authentication authentication) {
         if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PHARMACIST"))) {
-            com.aziz.demosec.entities.Pharmacist pharmacist = pharmacistRepository.findByEmail(authentication.getName())
+            com.aziz.demosec.Entities.Pharmacist pharmacist = pharmacistRepository.findByEmail(authentication.getName())
                     .orElse(null);
-            if (pharmacist != null && (!pharmacist.isPharmacySetupCompleted() || pharmacist.getStatus() != com.aziz.demosec.entities.PharmacistStatus.APPROVED)) {
+            if (pharmacist != null && (!pharmacist.isPharmacySetupCompleted() || pharmacist.getStatus() != com.aziz.demosec.Entities.PharmacistStatus.APPROVED)) {
                 throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Your pharmacy is pending admin approval.");
             }
         }

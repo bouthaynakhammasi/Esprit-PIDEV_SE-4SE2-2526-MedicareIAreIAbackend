@@ -1,6 +1,6 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.StockAlertType;
+import com.aziz.demosec.Entities.StockAlertType;
 import lombok.Builder;
 import lombok.Data;
 

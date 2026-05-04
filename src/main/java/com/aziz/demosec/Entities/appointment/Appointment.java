@@ -3,10 +3,9 @@ package com.aziz.demosec.Entities.appointment;
 import com.aziz.demosec.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
-@Entity
+@Entity(name = "AppointmentBooking")
 @Table(name = "appointments")
 @Getter
 @Setter
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Appointment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

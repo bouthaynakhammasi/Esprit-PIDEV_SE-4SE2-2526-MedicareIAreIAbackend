@@ -1,5 +1,6 @@
 package com.aziz.demosec.dto;
 
+import com.aziz.demosec.Entities.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ public class NotificationDTO {
     private Long id;
     private String title;
     private String message;
-    private String type;
+    private NotificationType type;
     private Long targetId;
     private Long participationId;
     private String eventTitle;

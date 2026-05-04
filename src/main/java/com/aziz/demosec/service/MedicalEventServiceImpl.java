@@ -2,7 +2,7 @@ package com.aziz.demosec.service;
 
 import com.aziz.demosec.domain.User;
 import com.aziz.demosec.dto.*;
-import com.aziz.demosec.entities.*;
+import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.repository.MedicalEventRepository;
 import com.aziz.demosec.repository.UserRepository;
 import com.aziz.demosec.repository.EventParticipationRepository;
@@ -103,7 +103,7 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
         if (request.getDate() != null) e.setDate(request.getDate());
         if (request.getCapacity() != null) e.setCapacity(request.getCapacity());
         if (request.getTicketPrice() != null) e.setTicketPrice(request.getTicketPrice());
-        
+
         if (image != null && !image.isEmpty()) {
             String b64 = "data:" + image.getContentType() + ";base64," + Base64.getEncoder().encodeToString(image.getBytes());
             e.setImageUrl(b64);
@@ -138,8 +138,8 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
         }
         if (e instanceof PhysicalEvent pe) {
             b.venueName(pe.getVenueName()).address(pe.getAddress())
-             .city(pe.getCity()).postalCode(pe.getPostalCode()).country(pe.getCountry())
-             .venueType(pe.getVenueType() != null ? pe.getVenueType().name() : null);
+                    .city(pe.getCity()).postalCode(pe.getPostalCode()).country(pe.getCountry())
+                    .venueType(pe.getVenueType() != null ? pe.getVenueType().name() : null);
         }
         return b.build();
     }
@@ -214,8 +214,9 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
                     .recipient(admin).sender(user)
                     .title("New Event Participation Request")
                     .message(user.getFullName() + " wants to join: \"" + event.getTitle() + "\"")
-                    .type("EVENT_JOIN").targetId(eventId).participationId(savedParticipation.getId())
-                    .read(false).createdAt(LocalDateTime.now()).build();
+                    .type(NotificationType.EVENT_JOIN)
+                    .targetId(eventId).participationId(savedParticipation.getId())
+                    .isRead(false).createdAt(LocalDateTime.now()).build();
             notificationService.sendNotification(notification);
         });
     }
@@ -225,16 +226,16 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
         EventParticipation p = participationRepository.findById(participationId).orElseThrow();
         p.setStatus("CONFIRMED");
         participationRepository.save(p);
-        
+
         User admin = userRepository.findByRole(Role.ADMIN).stream().findFirst().orElse(null);
-        
+
         Notification notif = Notification.builder()
                 .recipient(p.getPatient()).sender(admin)
                 .title("Participation Accepted")
                 .message("✅ Your participation in \"" + p.getEvent().getTitle() + "\" has been ACCEPTED!")
-                .type("PARTICIPATION_ACCEPTED").targetId(p.getEvent().getId())
-                .participationId(participationId).read(false).createdAt(LocalDateTime.now()).build();
-        notificationService.sendNotification(notif);
+                .type(NotificationType.PARTICIPATION_ACCEPTED)
+                .targetId(p.getEvent().getId())
+                .participationId(participationId).isRead(false).createdAt(LocalDateTime.now()).build();        notificationService.sendNotification(notif);
     }
 
     @Override
@@ -242,16 +243,16 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
         EventParticipation p = participationRepository.findById(participationId).orElseThrow();
         p.setStatus("REJECTED");
         participationRepository.save(p);
-        
+
         Notification notif = Notification.builder()
                 .recipient(p.getPatient())
                 .title("Participation Rejected")
                 .message("❌ Your participation in \"" + p.getEvent().getTitle() + "\" has been rejected.")
-                .type("PARTICIPATION_REJECTED").targetId(p.getEvent().getId())
-                .participationId(participationId).read(false).createdAt(LocalDateTime.now()).build();
+                .type(NotificationType.PARTICIPATION_REJECTED)
+                .targetId(p.getEvent().getId())
+                .participationId(participationId).isRead(false).createdAt(LocalDateTime.now()).build();
         notificationService.sendNotification(notif);
     }
-
     @Override
     public void cancelParticipation(Long eventId, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
@@ -303,7 +304,7 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
             double prevRate = prevRegs > 0 ? (double) prevAtt / prevRegs : 0;
             double currentRate = registrations > 0 ? (double) attendance / registrations : 0;
             attendanceDrift = (currentRate - prevRate) * 100;
-            
+
             Double prevSat = feedbackRepository.getAverageRating(prev.getId());
             if (prevSat != null && avgRating != null) {
                 satisfactionDrift = avgRating - prevSat;
@@ -384,7 +385,7 @@ public class MedicalEventServiceImpl implements IMedicalEventService {
                 p.getPatient().getFullName(),
                 p.getStatus(),
                 p.getId()
-            );
+        );
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         HtmlConverter.convertToPdf(html, baos);

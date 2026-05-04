@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "users")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "dtype")
 @DiscriminatorValue("User")
 @Getter
 @Setter
@@ -15,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -28,16 +33,32 @@ public class User {
     String email;
 
     @Column(nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     Role role;
 
     String phone;
 
-    String birthDate;
+    LocalDate birthDate;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    String photo;
+
+    String professionalDocument;
 
     @Builder.Default
     boolean enabled = true;
+
+    @Builder.Default
+    boolean profileCompleted = false;
+
+    @Column(columnDefinition = "LONGTEXT")
+    String profileImage;
+
+    public String getProfileImage() { return this.profileImage; }
+    public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
 }

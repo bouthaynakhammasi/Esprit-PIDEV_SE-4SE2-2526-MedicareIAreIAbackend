@@ -1,7 +1,7 @@
 package com.aziz.demosec.service;
 
 import com.aziz.demosec.dto.NotificationDTO;
-import com.aziz.demosec.entities.Notification;
+import com.aziz.demosec.Entities.Notification;
 import java.util.List;
 
 public interface INotificationService {

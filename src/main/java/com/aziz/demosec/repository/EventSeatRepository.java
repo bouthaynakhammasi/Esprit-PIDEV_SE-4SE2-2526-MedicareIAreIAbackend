@@ -1,7 +1,7 @@
 package com.aziz.demosec.repository;
 
 import com.aziz.demosec.dto.SeatZoneSummaryResponse;
-import com.aziz.demosec.entities.EventSeat;
+import com.aziz.demosec.Entities.EventSeat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,17 +16,17 @@ public interface EventSeatRepository extends JpaRepository<EventSeat, Long> {
     // ── Zone-level summary (breakdown per zone/section/table group) ──────────
     @Query("SELECT new com.aziz.demosec.dto.SeatZoneSummaryResponse(" +
             "s.zoneName, COUNT(s.id), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.AVAILABLE THEN 1L ELSE 0L END), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.RESERVED  THEN 1L ELSE 0L END), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.BLOCKED   THEN 1L ELSE 0L END)) " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.AVAILABLE THEN 1L ELSE 0L END), " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.RESERVED  THEN 1L ELSE 0L END), " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.BLOCKED   THEN 1L ELSE 0L END)) " +
             "FROM EventSeat s WHERE s.event.id = :eventId GROUP BY s.zoneName")
     List<SeatZoneSummaryResponse> getSeatSummaryByZone(@Param("eventId") Long eventId);
 
     // ── Global aggregate: [total, available, reserved, blocked] ─────────────
     @Query("SELECT COUNT(s), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.AVAILABLE THEN 1L ELSE 0L END), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.RESERVED  THEN 1L ELSE 0L END), " +
-            "SUM(CASE WHEN s.status = com.aziz.demosec.entities.SeatStatus.BLOCKED   THEN 1L ELSE 0L END) " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.AVAILABLE THEN 1L ELSE 0L END), " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.RESERVED  THEN 1L ELSE 0L END), " +
+            "SUM(CASE WHEN s.status = com.aziz.demosec.Entities.SeatStatus.BLOCKED   THEN 1L ELSE 0L END) " +
             "FROM EventSeat s LEFT JOIN s.event e WHERE e.id = :eventId")
     List<Object[]> getTotalSeatingStats(@Param("eventId") Long eventId);
 

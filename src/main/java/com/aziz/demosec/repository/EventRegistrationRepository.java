@@ -1,7 +1,7 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.EventRegistration;
-import com.aziz.demosec.entities.RegistrationStatus;
+import com.aziz.demosec.Entities.EventRegistration;
+import com.aziz.demosec.Entities.RegistrationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

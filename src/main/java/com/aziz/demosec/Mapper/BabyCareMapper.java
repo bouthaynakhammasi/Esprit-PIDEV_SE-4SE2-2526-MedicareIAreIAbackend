@@ -1,5 +1,9 @@
 package com.aziz.demosec.Mapper;
 
+import com.aziz.demosec.Entities.DiaperRecord;
+import com.aziz.demosec.Entities.JournalEntry;
+import com.aziz.demosec.Entities.ParentPreference;
+import com.aziz.demosec.Entities.Vaccination;
 import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.dto.baby.*;
 import org.springframework.stereotype.Component;

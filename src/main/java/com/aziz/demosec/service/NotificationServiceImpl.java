@@ -1,6 +1,8 @@
 package com.aziz.demosec.service;
 
-import com.aziz.demosec.entities.Notification;
+import com.aziz.demosec.Entities.NotificationType;
+import com.aziz.demosec.Entities.ServiceProvider;
+import com.aziz.demosec.Entities.Notification;
 import com.aziz.demosec.dto.NotificationDTO;
 import com.aziz.demosec.dto.pharmacy.NotificationResponseDTO;
 import com.aziz.demosec.Entities.*;
@@ -36,8 +38,7 @@ public class NotificationServiceImpl implements INotificationService, Notificati
     @Override
     @Transactional(readOnly = true)
     public List<NotificationDTO> getUnreadForAdmin(String email) {
-        return notificationRepository.findByRecipientEmailAndReadFalseOrderByCreatedAtDesc(email)
-                .stream()
+        return notificationRepository.findByRecipientEmailAndIsReadFalseOrderByCreatedAtDesc(email)                .stream()
                 .map(this::toDTOBasic)
                 .toList();
     }
@@ -52,11 +53,10 @@ public class NotificationServiceImpl implements INotificationService, Notificati
 
     @Override
     public void markAllAsRead(String email) {
-        List<Notification> unread = notificationRepository.findByRecipientEmailAndReadFalseOrderByCreatedAtDesc(email);
+        List<Notification> unread = notificationRepository.findByRecipientEmailAndIsReadFalseOrderByCreatedAtDesc(email);
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
     }
-
     @Override
     public void deleteNotification(Long id) {
         notificationRepository.deleteById(id);

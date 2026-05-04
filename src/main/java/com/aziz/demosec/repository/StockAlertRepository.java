@@ -1,7 +1,7 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.StockAlert;
-import com.aziz.demosec.entities.StockAlertType;
+import com.aziz.demosec.Entities.StockAlert;
+import com.aziz.demosec.Entities.StockAlertType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.ProductType;
-import com.aziz.demosec.entities.ProductUnit;
+import com.aziz.demosec.Entities.ProductType;
+import com.aziz.demosec.Entities.ProductUnit;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 

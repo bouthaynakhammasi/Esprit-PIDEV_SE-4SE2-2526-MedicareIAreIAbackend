@@ -18,6 +18,12 @@ import com.aziz.demosec.repository.PharmacyRepository;
 import com.aziz.demosec.repository.UserRepository;
 import com.aziz.demosec.repository.DoctorRepository;
 import com.aziz.demosec.repository.NutritionistRepository;
+import com.aziz.demosec.repository.ClinicRepository;
+import com.aziz.demosec.repository.LaboratoryStaffRepository;
+import com.aziz.demosec.repository.LaboratoryRepository;
+import com.aziz.demosec.Entities.Clinic;
+import com.aziz.demosec.Entities.Laboratory;
+import com.aziz.demosec.Entities.LaboratoryStaff;
 import com.aziz.demosec.security.CustomUserDetailsService;
 import com.aziz.demosec.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +55,9 @@ public class AuthServiceImpl implements AuthService {
     private final NotificationService notificationService;
     private final com.aziz.demosec.repository.ServiceProviderRepository serviceProviderRepository;
     private final com.aziz.demosec.repository.HomeCareServiceRepository homeCareServiceRepository;
+    private final ClinicRepository clinicRepository;
+    private final LaboratoryStaffRepository laboratoryStaffRepository;
+    private final LaboratoryRepository laboratoryRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailService emailService;
 
@@ -128,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
             pharmacist.setPhone(req.phone());
             pharmacist.setBirthDate(req.birthDate());
             pharmacist.setProfessionalDocument(documentUrl);
-            pharmacist.setEnabled(false); // ❌ Disabled until admin approval
+            pharmacist.setEnabled(true); // ✅ Enabled by default for testing
             pharmacist.setPharmacy(newPharmacy);
 
             Pharmacist saved = pharmacistRepository.save(pharmacist);
@@ -155,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
             user.setRole(Role.HOME_CARE_PROVIDER);
             user.setPhone(req.phone());
             user.setBirthDate(req.birthDate());
-            user.setEnabled(false); // ❌ Set to false for admin approval
+            user.setEnabled(true); // ✅ Enabled by default for testing
 
             user = userRepository.save(user);
 
@@ -220,6 +229,56 @@ public class AuthServiceImpl implements AuthService {
             nutritionist.setConsultationMode(req.consultationMode() != null ? req.consultationMode() : com.aziz.demosec.Entities.ConsultationMode.BOTH);
 
             return nutritionistRepository.save(nutritionist);
+        }
+
+        // =========================
+        // CAS CLINIC
+        // =========================
+        if (req.role() == Role.CLINIC) {
+            Clinic clinic = new Clinic();
+            clinic.setFullName(req.clinicName() == null ? "Not Available" : req.clinicName());
+            clinic.setName(req.clinicName());
+            clinic.setEmail(req.email());
+            clinic.setPassword(passwordEncoder.encode(req.password()));
+            clinic.setRole(Role.CLINIC);
+            clinic.setPhone(req.clinicPhone());
+            clinic.setAddress(req.clinicAddress());
+            clinic.setEmergencyPhone(req.emergencyPhone());
+            clinic.setAmbulancePhone(req.ambulancePhone());
+            clinic.setHasEmergency(req.emergencyPhone() != null);
+            clinic.setHasAmbulance(req.ambulancePhone() != null);
+            clinic.setEnabled(true);
+            clinic.setVerified(false);
+
+            return clinicRepository.save(clinic);
+        }
+
+        // =========================
+        // CAS LABORATORY_STAFF
+        // =========================
+        if (req.role() == Role.LABORATORY_STAFF) {
+            // 1. Create Laboratory
+            Laboratory lab = Laboratory.builder()
+                    .name(req.labName() != null ? req.labName() : "Laboratory " + req.fullName())
+                    .address(req.labAddress())
+                    .phone(req.labPhone())
+                    .email(req.email())
+                    .active(true)
+                    .build();
+            lab = laboratoryRepository.save(lab);
+
+            // 2. Create Staff
+            LaboratoryStaff staff = new LaboratoryStaff();
+            staff.setFullName(req.fullName() == null ? "Not Available" : req.fullName());
+            staff.setEmail(req.email());
+            staff.setPassword(passwordEncoder.encode(req.password()));
+            staff.setRole(Role.LABORATORY_STAFF);
+            staff.setPhone(req.phone());
+            staff.setBirthDate(req.birthDate());
+            staff.setLaboratory(lab);
+            staff.setEnabled(true);
+
+            return laboratoryStaffRepository.save(staff);
         }
 
         // =========================

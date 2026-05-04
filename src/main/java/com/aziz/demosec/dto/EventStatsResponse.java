@@ -1,6 +1,5 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.MedicalEventType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

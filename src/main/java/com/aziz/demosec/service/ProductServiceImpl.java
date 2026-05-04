@@ -1,6 +1,6 @@
 package com.aziz.demosec.service;
 
-import com.aziz.demosec.entities.Product;
+import com.aziz.demosec.Entities.Product;
 import com.aziz.demosec.repository.ProductRepository;
 
 import com.aziz.demosec.dto.ProductRequest;

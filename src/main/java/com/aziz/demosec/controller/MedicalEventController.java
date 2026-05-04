@@ -87,7 +87,7 @@ public class MedicalEventController {
     public ResponseEntity<?> isParticipating(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Optional<com.aziz.demosec.entities.EventParticipation> p = medicalEventService.getParticipation(id, userDetails.getUsername());
+        Optional<com.aziz.demosec.Entities.EventParticipation> p = medicalEventService.getParticipation(id, userDetails.getUsername());
         if (p.isPresent()) {
             return ResponseEntity.ok(Map.of(
                 "participating", true,

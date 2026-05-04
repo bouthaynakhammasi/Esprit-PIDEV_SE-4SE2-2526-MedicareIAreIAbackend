@@ -6,7 +6,7 @@ import com.aziz.demosec.dto.StockAlertResponse;
 import com.aziz.demosec.dto.StockBatchResponse;
 import com.aziz.demosec.dto.StockMovementRequest;
 import com.aziz.demosec.dto.StockMovementResponse;
-import com.aziz.demosec.entities.*;
+import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;

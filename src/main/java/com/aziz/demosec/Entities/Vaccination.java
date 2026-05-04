@@ -3,7 +3,6 @@ package com.aziz.demosec.Entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vaccinations")

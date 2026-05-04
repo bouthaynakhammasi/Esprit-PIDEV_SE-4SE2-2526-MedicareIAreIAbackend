@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
 @Entity
+@DiscriminatorValue("Doctor")
 
 @Getter
 @Setter

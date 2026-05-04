@@ -21,7 +21,7 @@ public class MealPlan {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipe_id", nullable = false)
-    private HealthyRecipe recipe;
+    private com.aziz.demosec.Entities.HealthyRecipe recipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)

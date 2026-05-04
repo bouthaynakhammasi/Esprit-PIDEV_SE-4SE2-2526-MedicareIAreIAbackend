@@ -1,7 +1,6 @@
 package com.aziz.demosec.Schedulers;
 
-import com.aziz.demosec.Config.HealthThresholds;
-import com.aziz.demosec.Entities.*;
+import com.aziz.demosec.Entities.Patient;
 import com.aziz.demosec.repository.*;
 import com.aziz.demosec.service.DailyHealthReportService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

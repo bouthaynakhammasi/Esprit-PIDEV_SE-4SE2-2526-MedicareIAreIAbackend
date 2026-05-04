@@ -1,6 +1,6 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.EventFeedback;
+import com.aziz.demosec.Entities.EventFeedback;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

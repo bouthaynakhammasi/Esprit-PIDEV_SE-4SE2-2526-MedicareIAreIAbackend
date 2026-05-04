@@ -1,6 +1,6 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.EventParticipation;
+import com.aziz.demosec.Entities.EventParticipation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

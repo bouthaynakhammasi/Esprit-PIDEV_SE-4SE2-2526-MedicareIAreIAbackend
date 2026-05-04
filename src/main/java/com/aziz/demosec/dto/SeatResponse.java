@@ -1,6 +1,6 @@
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.SeatStatus;
+import com.aziz.demosec.Entities.SeatStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

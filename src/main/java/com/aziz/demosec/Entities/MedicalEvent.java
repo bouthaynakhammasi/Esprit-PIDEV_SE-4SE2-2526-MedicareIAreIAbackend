@@ -37,4 +37,10 @@ public abstract class MedicalEvent {
     @JoinColumn(name = "created_by_id")
     private User createdBy;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageUrl;
+
+    private Integer capacity;
+
+    private Double ticketPrice;
 }

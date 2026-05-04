@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "physical_events")
-
+@DiscriminatorValue("PHYSICAL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,11 +14,16 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class PhysicalEvent extends MedicalEvent {
+
     private String venueName;
     private String address;
     private String city;
     private String postalCode;
     private String country;
-    private Integer capacity;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "venue_type")
+    private VenueType venueType;
+
+    private Integer capacity;
 }

@@ -1,8 +1,8 @@
 package com.aziz.demosec.repository;
 
 import com.aziz.demosec.dto.EventStatsResponse;
-import com.aziz.demosec.entities.MedicalEvent;
-import com.aziz.demosec.entities.MedicalEventType;
+import com.aziz.demosec.Entities.MedicalEvent;
+import com.aziz.demosec.Entities.MedicalEventType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

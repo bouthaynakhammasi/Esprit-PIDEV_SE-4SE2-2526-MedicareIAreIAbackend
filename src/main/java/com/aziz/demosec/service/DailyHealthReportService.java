@@ -1,7 +1,11 @@
 package com.aziz.demosec.service;
 
-import com.aziz.demosec.Config.HealthThresholds;
-import com.aziz.demosec.Entities.*;
+import com.aziz.demosec.Entities.AnomalyType;
+import com.aziz.demosec.Entities.DailyHealthReport;
+import com.aziz.demosec.Entities.LifestylePlan;
+import com.aziz.demosec.Entities.Patient;
+import com.aziz.demosec.Entities.PlanStatus;
+import com.aziz.demosec.config.HealthThresholds;
 import com.aziz.demosec.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +65,7 @@ public class DailyHealthReportService {
         boolean missedLog = false;
 
         if (actualCalories == 0) {
-            anomalies.add(AnomalyType.MISSED_LOG);
+            anomalies.add(com.aziz.demosec.Entities.AnomalyType.MISSED_LOG);
             missedLog = true;
         }
 
@@ -82,7 +86,7 @@ public class DailyHealthReportService {
 
         // 6. Check if report already exists for this date, if so, update it
         Optional<DailyHealthReport> existing = reportRepository.findByPatientIdAndReportDate(patient.getId(), date);
-        
+
         DailyHealthReport report = existing.orElse(new DailyHealthReport());
         report.setPatient(patient);
         report.setLifestylePlan(plan);

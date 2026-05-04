@@ -1,6 +1,6 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.Pharmacist;
+import com.aziz.demosec.Entities.Pharmacist;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +16,5 @@ public interface PharmacistRepository extends JpaRepository<Pharmacist, Long> {
 
     boolean existsByEmail(String email);
 
-    List<Pharmacist> findByStatus(com.aziz.demosec.entities.PharmacistStatus status);
+    List<Pharmacist> findByStatus(com.aziz.demosec.Entities.PharmacistStatus status);
 }

@@ -1,6 +1,6 @@
 package com.aziz.demosec.service;
 
-import com.aziz.demosec.entities.EmailVerificationCode;
+import com.aziz.demosec.Entities.EmailVerificationCode;
 import com.aziz.demosec.repository.EmailVerificationCodeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;

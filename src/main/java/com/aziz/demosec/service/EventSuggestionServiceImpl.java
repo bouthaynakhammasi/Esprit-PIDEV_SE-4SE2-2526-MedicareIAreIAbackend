@@ -1,10 +1,11 @@
 package com.aziz.demosec.service;
 
+import com.aziz.demosec.Entities.NotificationType;
 import com.aziz.demosec.domain.Role;
 import com.aziz.demosec.domain.User;
 import com.aziz.demosec.dto.EventSuggestionRequest;
-import com.aziz.demosec.entities.EventSuggestion;
-import com.aziz.demosec.entities.Notification;
+import com.aziz.demosec.Entities.EventSuggestion;
+import com.aziz.demosec.Entities.Notification;
 import com.aziz.demosec.repository.EventSuggestionRepository;
 import com.aziz.demosec.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +46,9 @@ public class EventSuggestionServiceImpl {
                     .sender(user)
                     .title("New Event Suggestion")
                     .message("New Event Suggestion from " + user.getFullName() + ": " + suggestion.getTitle())
-                    .type("EVENT_SUGGESTION")
+                    .type(NotificationType.EVENT_SUGGESTION)
                     .targetId(saved.getId())
-                    .read(false)
+                    .isRead(false)
                     .createdAt(LocalDateTime.now())
                     .build();
             notificationService.sendNotification(notification);

@@ -19,9 +19,15 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** The user who receives this notification. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_id", nullable = false)
+    @JoinColumn(name = "recipient_id")
     private User recipient;
+
+    /** The user who triggered this notification (optional). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
@@ -43,6 +49,12 @@ public class Notification {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    // Optional: ID of related entity (e.g. post for forum notifications)
+    /** ID of a related MedicalEvent (used by event notification flow). */
+    private Long targetId;
+
+    /** ID of a related EventParticipation (used by event notification flow). */
+    private Long participationId;
+
+    /** Optional: ID of any other related entity (e.g. forum post). */
     private Long relatedId;
 }

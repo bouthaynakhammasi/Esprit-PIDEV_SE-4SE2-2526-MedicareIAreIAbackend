@@ -1,6 +1,6 @@
 package com.aziz.demosec.repository;
 
-import com.aziz.demosec.entities.PharmacyStock;
+import com.aziz.demosec.Entities.PharmacyStock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.aziz.demosec.dto.StockSummaryResponse;
 import org.springframework.data.domain.Page;

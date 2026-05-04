@@ -60,9 +60,9 @@ public class DailyHealthReportController {
     public ResponseEntity<DailyHealthReportDTO> getByDate(
             @PathVariable Long patientId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         Optional<DailyHealthReport> report = reportRepository.findByPatientIdAndReportDate(patientId, date);
-        
+
         // If it's today and not found, or if we want to force refresh today's data
         if (report.isEmpty() && date.equals(LocalDate.now())) {
             return patientRepository.findById(patientId)
@@ -82,9 +82,9 @@ public class DailyHealthReportController {
     public ResponseEntity<DailyHealthReportDTO> generate(
             @PathVariable Long patientId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        
+
         return patientRepository.findById(patientId)
                 .map(p -> reportService.generateReport(p, targetDate))
                 .map(this::toDTO)

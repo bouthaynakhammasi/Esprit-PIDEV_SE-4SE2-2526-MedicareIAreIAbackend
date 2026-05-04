@@ -3,11 +3,11 @@ package com.aziz.demosec.Entities;
 import com.aziz.demosec.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
 @Entity
+@DiscriminatorValue("Nutritionist")
 
 @Getter
 @Setter

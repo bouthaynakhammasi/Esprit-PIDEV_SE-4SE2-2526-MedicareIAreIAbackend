@@ -1,7 +1,7 @@
 package com.aziz.demosec.controller;
 
 import com.aziz.demosec.dto.EventSuggestionRequest;
-import com.aziz.demosec.entities.EventSuggestion;
+import com.aziz.demosec.Entities.EventSuggestion;
 import com.aziz.demosec.service.EventSuggestionServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

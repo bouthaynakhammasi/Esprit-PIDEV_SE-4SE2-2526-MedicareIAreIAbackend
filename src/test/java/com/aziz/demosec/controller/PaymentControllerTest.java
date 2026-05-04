@@ -6,7 +6,6 @@ import com.aziz.demosec.dto.pharmacy.PaymentRequestDTO;
 import com.aziz.demosec.dto.pharmacy.PaymentResponseDTO;
 import com.aziz.demosec.security.CustomUserDetailsService;
 import com.aziz.demosec.security.jwt.JwtService;
-import com.aziz.demosec.service.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

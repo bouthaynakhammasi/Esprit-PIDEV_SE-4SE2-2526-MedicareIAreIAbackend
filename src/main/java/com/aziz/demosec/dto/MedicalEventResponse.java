@@ -1,7 +1,7 @@
 
 package com.aziz.demosec.dto;
 
-import com.aziz.demosec.entities.MedicalEventType;
+import com.aziz.demosec.Entities.MedicalEventType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -35,4 +35,4 @@ public class MedicalEventResponse {
     private String platformName;
     private String meetingLink;
     private String meetingPassword;
-}
+}

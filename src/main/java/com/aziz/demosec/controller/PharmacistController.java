@@ -1,7 +1,7 @@
 package com.aziz.demosec.controller;
 
-import com.aziz.demosec.entities.Pharmacist;
-import com.aziz.demosec.entities.PharmacistStatus;
+import com.aziz.demosec.Entities.Pharmacist;
+import com.aziz.demosec.Entities.PharmacistStatus;
 import com.aziz.demosec.repository.PharmacistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

@@ -7,6 +7,7 @@ import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
+@DiscriminatorValue("Clinic")
 @Table(name = "clinic")
 
 @Getter

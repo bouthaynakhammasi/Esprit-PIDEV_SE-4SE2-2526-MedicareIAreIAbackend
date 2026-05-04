@@ -3,8 +3,8 @@ package com.aziz.demosec.service;
 import com.aziz.demosec.dto.MedicalEventCreateRequest;
 import com.aziz.demosec.dto.MedicalEventUpdateRequest;
 import com.aziz.demosec.dto.MedicalEventResponse;
-import com.aziz.demosec.entities.MedicalEventType;
-import com.aziz.demosec.entities.EventParticipation;
+import com.aziz.demosec.Entities.MedicalEventType;
+import com.aziz.demosec.Entities.EventParticipation;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;

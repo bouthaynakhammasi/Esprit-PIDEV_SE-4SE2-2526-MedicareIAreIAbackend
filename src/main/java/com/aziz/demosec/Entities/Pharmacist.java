@@ -1,6 +1,5 @@
-package com.aziz.demosec.entities;
+package com.aziz.demosec.Entities;
 
-import com.aziz.demosec.Entities.Pharmacy;
 import com.aziz.demosec.domain.User;
 import jakarta.persistence.*;
 import lombok.*;

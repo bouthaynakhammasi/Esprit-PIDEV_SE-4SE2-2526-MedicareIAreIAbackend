@@ -1,5 +1,7 @@
 package com.aziz.demosec.service;
 
+import com.aziz.demosec.Entities.StockAlertType;
+import com.aziz.demosec.Entities.StockMovementType;
 import com.aziz.demosec.dto.ReceiveBatchRequest;
 import com.aziz.demosec.dto.StockMovementRequest;
 import com.aziz.demosec.dto.PharmacyStockResponse;
@@ -8,7 +10,7 @@ import com.aziz.demosec.dto.StockBatchResponse;
 import com.aziz.demosec.dto.StockMovementResponse;
 import com.aziz.demosec.dto.StockoutPredictionRequest;
 import com.aziz.demosec.dto.StockoutPredictionResult;
-import com.aziz.demosec.entities.*;
+import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.repository.PharmacyRepository;
 import com.aziz.demosec.repository.ProductRepository;
 import com.aziz.demosec.repository.PharmacyStockRepository;
@@ -291,89 +293,89 @@ public class StockServiceImpl implements IStockService {
         return pharmacyStockRepository.searchProducts(keyword, pageable)
                 .map(this::toStockResponse);
     }
-    
+
     @Override
     public List<com.aziz.demosec.dto.ReplenishmentPredictionResponse> predictReplenishment(Long pharmacyId) {
         List<PharmacyStock> stocks = pharmacyStockRepository.findByPharmacyId(pharmacyId);
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
 
         return stocks.stream().map(ps -> {
-            Long totalOut = stockMovementRepository.getTotalOutQuantitySince(ps.getId(), thirtyDaysAgo);
-            int consumption30d = totalOut != null ? totalOut.intValue() : 0;
+                    Long totalOut = stockMovementRepository.getTotalOutQuantitySince(ps.getId(), thirtyDaysAgo);
+                    int consumption30d = totalOut != null ? totalOut.intValue() : 0;
 
-            double dailyRate = consumption30d / 30.0;
+                    double dailyRate = consumption30d / 30.0;
 
-            String category = ps.getProduct().getCategory();
-            boolean isSeasonal = category != null && (category.toLowerCase().contains("flu") || category.toLowerCase().contains("cold") || category.toLowerCase().contains("allergy"));
-            double seasonalFactor = isSeasonal ? 1.3 : 1.0;
-            double adjustedDailyRate = dailyRate * seasonalFactor;
+                    String category = ps.getProduct().getCategory();
+                    boolean isSeasonal = category != null && (category.toLowerCase().contains("flu") || category.toLowerCase().contains("cold") || category.toLowerCase().contains("allergy"));
+                    double seasonalFactor = isSeasonal ? 1.3 : 1.0;
+                    double adjustedDailyRate = dailyRate * seasonalFactor;
 
-            int currentStock = ps.getTotalQuantity() != null ? ps.getTotalQuantity() : 0;
-            int minThreshold = ps.getMinQuantityThreshold() != null ? ps.getMinQuantityThreshold() : 0;
+                    int currentStock = ps.getTotalQuantity() != null ? ps.getTotalQuantity() : 0;
+                    int minThreshold = ps.getMinQuantityThreshold() != null ? ps.getMinQuantityThreshold() : 0;
 
-            int leadTimeDays = 7;
-            double safetyStock = adjustedDailyRate * 3;
-            double reorderPoint = (adjustedDailyRate * leadTimeDays) + safetyStock;
+                    int leadTimeDays = 7;
+                    double safetyStock = adjustedDailyRate * 3;
+                    double reorderPoint = (adjustedDailyRate * leadTimeDays) + safetyStock;
 
-            Integer suggestedQuantity = 0;
-            java.time.LocalDate estimatedDepletion = null;
+                    Integer suggestedQuantity = 0;
+                    java.time.LocalDate estimatedDepletion = null;
 
-            if (adjustedDailyRate > 0) {
-                int daysUntilDepletion = (int) (currentStock / adjustedDailyRate);
-                estimatedDepletion = java.time.LocalDate.now().plusDays(daysUntilDepletion);
-            }
+                    if (adjustedDailyRate > 0) {
+                        int daysUntilDepletion = (int) (currentStock / adjustedDailyRate);
+                        estimatedDepletion = java.time.LocalDate.now().plusDays(daysUntilDepletion);
+                    }
 
-            double targetLevel = (adjustedDailyRate * 30) + safetyStock;
-            if (currentStock <= Math.max(minThreshold, Math.ceil(reorderPoint))) {
-                suggestedQuantity = (int) Math.ceil(targetLevel - currentStock);
-            }
-            if (suggestedQuantity < 0) suggestedQuantity = 0;
+                    double targetLevel = (adjustedDailyRate * 30) + safetyStock;
+                    if (currentStock <= Math.max(minThreshold, Math.ceil(reorderPoint))) {
+                        suggestedQuantity = (int) Math.ceil(targetLevel - currentStock);
+                    }
+                    if (suggestedQuantity < 0) suggestedQuantity = 0;
 
-            long activeAlertsCount = stockAlertRepository.findByPharmacyStockIdAndResolvedFalse(ps.getId()).size();
+                    long activeAlertsCount = stockAlertRepository.findByPharmacyStockIdAndResolvedFalse(ps.getId()).size();
 
-            // Call ML model
-            double daysUntilStockout = dailyRate > 0 ? currentStock / dailyRate : 9999.0;
-            StockoutPredictionRequest mlRequest = StockoutPredictionRequest.builder()
-                    .nationalInv((double) currentStock)
-                    .leadTime((double) leadTimeDays)
-                    .inTransitQty(0.0)
-                    .forecast3Month((double) consumption30d * 3)
-                    .forecast6Month((double) consumption30d * 6)
-                    .sales1Month((double) consumption30d)
-                    .sales3Month((double) consumption30d * 3)
-                    .sales6Month((double) consumption30d * 6)
-                    .minBank((double) minThreshold)
-                    .piecesPastDue(0.0)
-                    .perf6MonthAvg(0.85)
-                    .perf12MonthAvg(0.85)
-                    .avgDailySales(dailyRate)
-                    .daysUntilStockout(daysUntilStockout)
-                    .build();
+                    // Call ML model
+                    double daysUntilStockout = dailyRate > 0 ? currentStock / dailyRate : 9999.0;
+                    StockoutPredictionRequest mlRequest = StockoutPredictionRequest.builder()
+                            .nationalInv((double) currentStock)
+                            .leadTime((double) leadTimeDays)
+                            .inTransitQty(0.0)
+                            .forecast3Month((double) consumption30d * 3)
+                            .forecast6Month((double) consumption30d * 6)
+                            .sales1Month((double) consumption30d)
+                            .sales3Month((double) consumption30d * 3)
+                            .sales6Month((double) consumption30d * 6)
+                            .minBank((double) minThreshold)
+                            .piecesPastDue(0.0)
+                            .perf6MonthAvg(0.85)
+                            .perf12MonthAvg(0.85)
+                            .avgDailySales(dailyRate)
+                            .daysUntilStockout(daysUntilStockout)
+                            .build();
 
-            StockoutPredictionResult mlResult = stockoutPredictionClient.predict(mlRequest);
+                    StockoutPredictionResult mlResult = stockoutPredictionClient.predict(mlRequest);
 
-            com.aziz.demosec.dto.ReplenishmentPredictionResponse.ReplenishmentPredictionResponseBuilder builder =
-                    com.aziz.demosec.dto.ReplenishmentPredictionResponse.builder()
-                            .pharmacyStockId(ps.getId())
-                            .productId(ps.getProduct().getId())
-                            .productName(ps.getProduct().getName())
-                            .currentStock(currentStock)
-                            .consumptionLast30Days(consumption30d)
-                            .activeAlerts((int) activeAlertsCount)
-                            .isSeasonal(isSeasonal)
-                            .suggestedOrderQuantity(suggestedQuantity)
-                            .estimatedDepletionDate(estimatedDepletion);
+                    com.aziz.demosec.dto.ReplenishmentPredictionResponse.ReplenishmentPredictionResponseBuilder builder =
+                            com.aziz.demosec.dto.ReplenishmentPredictionResponse.builder()
+                                    .pharmacyStockId(ps.getId())
+                                    .productId(ps.getProduct().getId())
+                                    .productName(ps.getProduct().getName())
+                                    .currentStock(currentStock)
+                                    .consumptionLast30Days(consumption30d)
+                                    .activeAlerts((int) activeAlertsCount)
+                                    .isSeasonal(isSeasonal)
+                                    .suggestedOrderQuantity(suggestedQuantity)
+                                    .estimatedDepletionDate(estimatedDepletion);
 
-            if (mlResult != null) {
-                builder.willStockout(mlResult.getWillStockout())
-                       .stockoutProbability(mlResult.getProbability())
-                       .mlBadge(mlResult.getBadge())
-                       .mlDaysUntilStockout(mlResult.getDaysUntilStockout());
-            }
+                    if (mlResult != null) {
+                        builder.willStockout(mlResult.getWillStockout())
+                                .stockoutProbability(mlResult.getProbability())
+                                .mlBadge(mlResult.getBadge())
+                                .mlDaysUntilStockout(mlResult.getDaysUntilStockout());
+                    }
 
-            return builder.build();
-        }).filter(r -> r.getSuggestedOrderQuantity() > 0 || r.getCurrentStock() <= r.getConsumptionLast30Days())
-        .toList();
+                    return builder.build();
+                }).filter(r -> r.getSuggestedOrderQuantity() > 0 || r.getCurrentStock() <= r.getConsumptionLast30Days())
+                .toList();
     }
 
     @Override
@@ -381,7 +383,7 @@ public class StockServiceImpl implements IStockService {
         LocalDate today = LocalDate.now();
         LocalDate redZone = today.plusDays(30);
         LocalDate orangeZone = today.plusDays(90);
-        
+
         return stockBatchRepository.getExpirationRiskDashboard(pharmacyId, today, redZone, orangeZone);
     }
 }

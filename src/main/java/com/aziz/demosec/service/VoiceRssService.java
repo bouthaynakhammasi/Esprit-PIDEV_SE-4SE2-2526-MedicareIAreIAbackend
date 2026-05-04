@@ -1,5 +1,4 @@
 package com.aziz.demosec.service;
-import com.aziz.demosec.entities.*;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 

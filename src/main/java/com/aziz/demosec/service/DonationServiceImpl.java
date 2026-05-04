@@ -173,8 +173,8 @@ public class DonationServiceImpl implements IDonationService {
         String profileImg = null;
         if (d.getCreatorId() != null) {
             profileImg = userRepository.findById(d.getCreatorId())
-                                       .map(user -> user.getProfileImage())
-                                       .orElse(null);
+                    .map(user -> user.getProfileImage())
+                    .orElse(null);
         }
 
         return DonationResponseDTO.builder()

@@ -35,10 +35,10 @@ public class GoogleAuthController {
                 .authorities(role)
                 .build();
 
-        String token = jwtService.generateToken(user, role);
+        String token = jwtService.generateToken(user, null, req.getEmail());
 
         pending.remove(req.getEmail());
 
-        return new AuthResponse(token, req.getEmail(), role);
+        return new AuthResponse(token, req.getEmail(), req.getEmail(), role);
     }
 }

@@ -1,6 +1,9 @@
 package com.aziz.demosec.service;
 
-import com.aziz.demosec.entities.*;
+import com.aziz.demosec.Entities.Treatment;
+import com.aziz.demosec.Entities.TreatmentStatus;
+import com.aziz.demosec.Entities.TreatmentType;
+import com.aziz.demosec.Entities.*;
 import com.aziz.demosec.repository.ConsultationRepository;
 import com.aziz.demosec.repository.TreatmentRepository;
 import com.aziz.demosec.dto.TreatmentRequest;
