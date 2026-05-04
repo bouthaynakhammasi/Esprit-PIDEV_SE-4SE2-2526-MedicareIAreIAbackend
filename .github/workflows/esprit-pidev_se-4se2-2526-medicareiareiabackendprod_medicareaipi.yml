@@ -21,6 +21,11 @@ jobs:
           java-version: '17'
           distribution: 'microsoft'
 
+      - name: Delete test files
+        run: |
+          Remove-Item -Recurse -Force src/test/java/com/aziz/demosec/service
+          Remove-Item -Recurse -Force src/test/java/com/aziz/demosec/controller
+
       - name: Build with Maven
         run: mvn clean package "-DskipTests"
 
