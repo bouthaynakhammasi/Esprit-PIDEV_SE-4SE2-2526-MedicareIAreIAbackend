@@ -1,9 +1,9 @@
-name: Build and deploy JAR app to Azure Web App - app-backend-medicareai
+name: Build and deploy JAR app to Azure Web App - medicareaipi
 
 on:
   push:
     branches:
-      - main
+      - Esprit-PIDEV_SE-4SE2-2526-MedicareIAreIAbackendprod
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,8 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests -Dmaven.test.skip=true
+        run: mvn clean package -DskipTests
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -45,13 +46,13 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E2A04182058141C386EAA04BEACFB388 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ACAAA8B7612E410E9BD5EB3DA9FCCCD5 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EA545A753BE14E169D19CA9D1E2F64A8 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_170291083432443996CDDB5F3441BE29 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E7FA60908AC544C895D728C1B984E635 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DA7F23DE913F4D969DF6F95BDDD30078 }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'app-backend-medicareai'
+          app-name: 'medicareaipi'
           slot-name: 'Production'
           package: '*.jar'
