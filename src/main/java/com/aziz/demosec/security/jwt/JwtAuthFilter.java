@@ -29,9 +29,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
-            "/auth",
-            "/api/home-care-services",
-            "/error",
+            "/auth/**",
+            "/api/auth/**",
+            "/api/home-care-services/**",
+            "/uploads/**",
+            "/api/donations/**",
+            "/api/aid-requests/**",
+            "/api/emergency-alerts/**",
+            "/api/interventions/**",
+            "/api/ambulances/**",
+            "/api/smart-devices/**",
+            "/api/laboratories/**",
+            "/api/clinics/**",
+            "/api/upload/**",
+            "/api/pharmacy/orders/*/invoice",
+            "/api/pharmacy/deliveries/**",
+            "/api/homecare/services/**",
+            "/api/homecare/providers/**",
+            "/error/**",
             "/ws/**");
 
     @Override
@@ -42,7 +57,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // 1. Skip public endpoints using AntPathMatcher
+        // Skip OPTIONS preflight requests (CORS)
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Skip public endpoints using AntPathMatcher
         AntPathMatcher matcher = new AntPathMatcher();
         for (String endpoint : PUBLIC_ENDPOINTS) {
             if (matcher.match(endpoint, path)) {
@@ -51,8 +72,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2️⃣ Read JWT — from Authorization header OR ?token= query param (SSE)
-
+        // Read JWT from Authorization header OR ?token= query param (SSE)
         String authHeader = request.getHeader("Authorization");
         String jwt = null;
 
@@ -67,13 +87,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         String userEmail;
 
         try {
-            // 3. Extract email from JWT
             userEmail = jwtService.extractEmail(jwt);
 
-            // 4. Authenticate if not already authenticated
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
@@ -100,7 +119,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 5. Continue filter chain
         filterChain.doFilter(request, response);
     }
 }
