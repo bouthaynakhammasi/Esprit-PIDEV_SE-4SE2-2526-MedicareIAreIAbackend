@@ -136,8 +136,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:*",
             "http://127.0.0.1:*",
-            // ⬇️ Remplacez par l'URL exacte de app-frontend1 depuis Azure Overview
-            "https://app-frontend1.azurewebsites.net",
+            "https://app-frontend1-d5a2bbbnb9avgteu.swedencentral-01.azurewebsites.net",
             "https://app-frontend-medicareai-2026-exhmfqgwewhzcjeu.swedencentral-01.azurewebsites.net"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
