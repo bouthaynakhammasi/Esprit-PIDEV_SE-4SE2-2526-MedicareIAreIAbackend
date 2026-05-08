@@ -8,6 +8,7 @@ import com.aziz.demosec.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -196,9 +197,24 @@ public class EmergencyServiceImpl implements IEmergencyService {
     // ─── INTERVENTION ─────────────────────────────────────────────
 
     @Override
+    @Transactional
     public AutoDispatchResponseDTO autoDispatch(Long alertId) {
         EmergencyAlert alert = findAlertById(alertId);
 
+        // 1. L'alerte doit être dans un état dispatchable (PENDING ou ACKNOWLEDGED)
+        if (alert.getStatus() == EmergencyAlertStatus.RESOLVED
+                || alert.getStatus() == EmergencyAlertStatus.CANCELED
+                || alert.getStatus() == EmergencyAlertStatus.CLINIC_NOTIFIED) {
+            throw new RuntimeException(
+                "Alert #" + alertId + " cannot be dispatched — current status: " + alert.getStatus());
+        }
+
+        // 2. Empêcher le double-dispatch sur la même alerte
+        if (alert.getIntervention() != null) {
+            throw new RuntimeException("Alert #" + alertId + " already has an intervention dispatched");
+        }
+
+        // 3. Trouver les ambulances AVAILABLE avec coordonnées GPS
         List<Ambulance> available = ambulanceRepository.findByStatus("AVAILABLE").stream()
                 .filter(a -> a.getCurrentLat() != null && a.getCurrentLng() != null)
                 .collect(Collectors.toList());
@@ -207,24 +223,38 @@ public class EmergencyServiceImpl implements IEmergencyService {
             throw new RuntimeException("No available ambulances with GPS coordinates found");
         }
 
+        // 4. Haversine : choisir l'ambulance la plus proche
         Ambulance closest = null;
         double minDistance = Double.MAX_VALUE;
         for (Ambulance amb : available) {
-            double dist = haversineDistance(alert.getLatitude(), alert.getLongitude(),
+            double dist = haversineDistance(
+                    alert.getLatitude(), alert.getLongitude(),
                     amb.getCurrentLat(), amb.getCurrentLng());
-            if (dist < minDistance) {
+            if (!Double.isNaN(dist) && dist < minDistance) {
                 minDistance = dist;
                 closest = amb;
             }
         }
 
+        if (closest == null) {
+            throw new RuntimeException("Could not calculate distance to any available ambulance");
+        }
+
+        // 5. L'ambulance doit avoir une clinique associée
+        Clinic clinic = closest.getClinic();
+        if (clinic == null) {
+            throw new RuntimeException("Ambulance #" + closest.getId() + " has no associated clinic");
+        }
+
+        // 6. Ambulance → ON_DUTY
         closest.setStatus("ON_DUTY");
         ambulanceRepository.save(closest);
 
+        // 7. Alerte → CLINIC_NOTIFIED (prise en charge, ni annulée ni résolue)
         alert.setStatus(EmergencyAlertStatus.CLINIC_NOTIFIED);
         alertRepository.save(alert);
 
-        Clinic clinic = closest.getClinic();
+        // 8. Créer l'intervention DISPATCHED
         EmergencyIntervention intervention = EmergencyIntervention.builder()
                 .emergencyAlert(alert)
                 .clinic(clinic)
@@ -234,14 +264,18 @@ public class EmergencyServiceImpl implements IEmergencyService {
                 .build();
         EmergencyIntervention saved = interventionRepository.save(intervention);
 
+        log.info("Auto-dispatch OK — alert#{} → ambulance#{} ({}) dist={}km",
+                alertId, closest.getId(), closest.getLicensePlate(),
+                Math.round(minDistance * 10.0) / 10.0);
+
         return AutoDispatchResponseDTO.builder()
                 .interventionId(saved.getId())
                 .emergencyAlertId(alertId)
                 .patientName(alert.getDevice().getPatient().getFullName())
                 .ambulanceId(closest.getId())
                 .ambulanceLicensePlate(closest.getLicensePlate())
-                .clinicId(clinic != null ? clinic.getId() : null)
-                .clinicName(clinic != null ? clinic.getName() : null)
+                .clinicId(clinic.getId())
+                .clinicName(clinic.getName())
                 .distanceKm(Math.round(minDistance * 10.0) / 10.0)
                 .status(EmergencyInterventionStatus.DISPATCHED.name())
                 .dispatchedAt(saved.getDispatchedAt())
